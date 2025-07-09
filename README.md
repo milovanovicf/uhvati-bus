@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UhvatiBus – Full-Stack Bus Reservation System
 
-## Getting Started
+## Overview
 
-First, run the development server:
+**UhvatiBus** is a full-stack web application that allows **bus companies** to publish and manage scheduled trips, and enables **users** to search for and book seats on available bus routes.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Problem
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### For Users:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Finding available intercity bus trips is often complicated (websites, call centers, printed schedules)
+- Booking a seat requires manual calls or visiting terminals and sometimes impossible
+- Users rarely get clear seat assignments or confirmations
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### For Companies:
 
-## Learn More
+- Managing reservations is error-prone when done manually
+- Avoiding overbooking and scheduling conflicts is difficult without a centralized system
+- Communication about bookings and cancellations takes time and resources
 
-To learn more about Next.js, take a look at the following resources:
+## Solution
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Users Can:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Search for available bus trips based on **departure**, **destination**, and **date**
+- Book one or more seats and receive an email **confirmation**
+- Get **assigned seat numbers** automatically
 
-## Deploy on Vercel
+### Companies Can:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Create accounts** and log in securely
+- Define their **routes**, **cities**, **trip schedules**, and **available seats**
+- Prevent **duplicate or overlapping trips**
+- Manage their **reservations** and **trip listings** easily
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Technologies Used
+
+### Frontend:
+
+- **Next.js App Router (React)** – UI rendering, routing, and SSR
+- **Tailwind and SAAS** – Styling
+- **Zod** – Client-side validation for form inputs
+
+### Backend:
+
+- **Next.js API routes (`/app/api`)** – Controller layer handling RESTful logic
+- **Prisma ORM** – Database access and schema modeling
+- **PostgreSQL** – Relational database
+- **Zod** – Request validation on the backend
+- **Bcrypt & JWT** – Secure authentication and session management
+
+### Testing:
+
+- **Jest** & **Supertest** – Automated API testing
+- **In-memory test server** – Simulates real HTTP requests
