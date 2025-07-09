@@ -14,25 +14,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Trip {
+  id         Int      @id @default(autoincrement())
+  routeId    Int
+  companyId  Int
+  departure  DateTime
+  arrival    DateTime
+  seatsTotal Int
+
+  route        Route         @relation(fields: [routeId], references: [id])
+  company      Company       @relation(fields: [companyId], references: [id])
+  reservations Reservation[]
+
+  @@unique([companyId, departure]) // No double trips per company/time
+}
+
 model Company {
   id       Int    @id @default(autoincrement())
   name     String
   email    String @unique
   password String
 
-  trips Trip[]
+  trips    Trip[]
+  Schedule Schedule[]
 }
 
-model Trip {
-  id         Int      @id @default(autoincrement())
-  from       String
-  to         String
-  date       DateTime
-  seatsTotal Int
-  company    Company  @relation(fields: [companyId], references: [id])
-  companyId  Int
+model Route {
+  id       Int  @id @default(autoincrement())
+  fromId   Int
+  toId     Int
+  from     City @relation("FromCity", fields: [fromId], references: [id])
+  to       City @relation("ToCity", fields: [toId], references: [id])
+  distance Int? // km, optional for map rendering
+  duration Int? // minutes, optional
 
-  reservations Reservation[]
+  trips    Trip[]
+  Schedule Schedule[]
+
+  @@unique([fromId, toId])
+}
+
+model City {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  fromRoutes Route[] @relation("FromCity")
+  toRoutes   Route[] @relation("ToCity")
 }
 
 model Reservation {
@@ -40,8 +67,30 @@ model Reservation {
   name      String
   email     String
   phone     String
-  seats     Int
+  seats     Int[]
   trip      Trip     @relation(fields: [tripId], references: [id])
   tripId    Int
   createdAt DateTime @default(now())
+}
+
+enum Weekday {
+  Sunday
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+}
+
+model Schedule {
+  id         Int     @id @default(autoincrement())
+  companyId  Int
+  routeId    Int
+  weekday    Weekday
+  time       String // "08:00" format
+  seatsTotal Int
+
+  company Company @relation(fields: [companyId], references: [id])
+  route   Route   @relation(fields: [routeId], references: [id])
 }
