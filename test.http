@@ -1,0 +1,141 @@
+### Register a company
+
+POST http://localhost:3000/api/register
+Content-Type: application/json
+
+{
+"name": "Lasta",
+"email": "lasta@uhvati.rs",
+"password": "secure123"
+}
+
+###
+
+### Log in as company
+
+POST http://localhost:3000/api/login
+Content-Type: application/json
+
+{
+"email": "lasta@uhvati.rs",
+"password": "secure123"
+}
+
+###
+
+# After login, copy the returned token and paste below ↓↓↓
+
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzUxOTE2MDM3LCJleHAiOjE3NTIwMDI0Mzd9.OIyAkNPQJG4MI94G-M8TzkV0epu2wyCys-EsG5IaiWg
+
+
+### Create a city from
+POST http://localhost:3000/api/city
+Content-Type: application/json
+
+{
+  "name": "Krusevac"
+}
+
+### Create a city to
+POST http://localhost:3000/api/city
+Content-Type: application/json
+
+{
+  "name": "Beograd"
+}
+
+### Create a route
+POST http://localhost:3000/api/route
+Content-Type: application/json
+
+{
+"fromId": 1,
+"toId": 2 
+}
+
+
+### Create a new trip 
+
+POST http://localhost:3000/api/trips
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+"departure": "2025-07-09T15:00:00.000Z",
+"arrival": "2025-07-09T17:30:00.000Z",
+"seatsTotal": 40,
+"companyId": 1,
+"routeId": 1,
+"fromId": 1,
+"toId": 2
+}
+
+###
+
+### Delete trip
+DELETE http://localhost:3000/api/trips
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 1
+}
+
+###
+
+### List all trips
+
+GET http://localhost:3000/api/trips
+
+###
+
+### Search for trip
+GET http://localhost:3000/api/search?fromId=1&toId=2&date=2025-07-09
+
+
+###
+
+### Make a reservation (public endpoint)
+
+POST http://localhost:3000/api/reserve
+Content-Type: application/json
+
+{
+"name": "Petar",
+"email": "petar@email.com",
+"phone": "+381601234567",
+"seats": 3,
+"tripId": 1
+}
+
+###
+
+### Try overbooking (to test seat limit logic)
+
+POST http://localhost:3000/api/reserve
+Content-Type: application/json
+
+{
+"name": "Over Booker",
+"email": "nope@email.com",
+"phone": "+381601234568",
+"seats": 100,
+"tripId": 1
+}
+
+###
+
+
+### Canceling reservation
+DELETE http://localhost:3000/api/reserve
+Content-Type: application/json
+
+{
+  "id": 1
+}
+
+
+###
+POST http://localhost:3000/api/logout
+Content-Type: application/json
+
