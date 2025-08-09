@@ -14,6 +14,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Reservation {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  email     String
+  seats     Json
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  tripId    Int
+  createdAt DateTime @default(now())
+}
+
 model Trip {
   id         Int      @id @default(autoincrement())
   routeId    Int
@@ -26,17 +36,8 @@ model Trip {
   company      Company       @relation(fields: [companyId], references: [id])
   reservations Reservation[]
 
-  @@unique([companyId, departure]) // No double trips per company/time
-}
-
-model Company {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
-
-  trips    Trip[]
-  Schedule Schedule[]
+  // Add unique constraint on companyId + departure to avoid duplicate trips
+  @@unique([companyId, departure])
 }
 
 model Route {
@@ -45,7 +46,7 @@ model Route {
   toId     Int
   from     City @relation("FromCity", fields: [fromId], references: [id])
   to       City @relation("ToCity", fields: [toId], references: [id])
-  distance Int? // km, optional for map rendering
+  distance Int? // km, optional
   duration Int? // minutes, optional
 
   trips    Trip[]
@@ -62,15 +63,14 @@ model City {
   toRoutes   Route[] @relation("ToCity")
 }
 
-model Reservation {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String
-  phone     String
-  seats     Int[]
-  trip      Trip     @relation(fields: [tripId], references: [id])
-  tripId    Int
-  createdAt DateTime @default(now())
+model Company {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+
+  trips    Trip[]
+  Schedule Schedule[]
 }
 
 enum Weekday {
@@ -88,7 +88,7 @@ model Schedule {
   companyId  Int
   routeId    Int
   weekday    Weekday
-  time       String // "08:00" format
+  time       String // "HH:mm" format, e.g. "08:00"
   seatsTotal Int
 
   company Company @relation(fields: [companyId], references: [id])
