@@ -6,6 +6,8 @@ import Footer from '@/components/homepage/footer';
 import HowItWorks from '@/components/homepage/how-it-works';
 import FAQ from '@/components/homepage/faq';
 
+const routes = [];
+
 export default function HomePage() {
   return (
     <>
