@@ -1,13 +1,8 @@
 'use client';
 
-import { Route } from '@/generated/prisma';
 import BookingForm from './booking-form';
 
-type HeroProps = {
-  routes: Route[];
-};
-
-export default function Hero({ routes }: HeroProps) {
+export default function Hero() {
   return (
     <div
       className="relative flex items-center justify-end min-h-screen bg-cover bg-center px-5 py-15 sm:px-15 md:px-25 md:py-10 lg:px-40 lg:mb-20"
@@ -23,7 +18,7 @@ export default function Hero({ routes }: HeroProps) {
         <h3 className="text-xl text-gray-400">
           Brzo i jednostavno putuj između gradova
         </h3>
-        <BookingForm routes={routes} />
+        <BookingForm />
       </div>
     </div>
   );

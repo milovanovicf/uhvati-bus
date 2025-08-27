@@ -5,6 +5,9 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const cities = await prisma.city.findMany({
     select: { id: true, name: true },
+    orderBy: {
+      name: 'asc',
+    },
   });
   return NextResponse.json(cities);
 }

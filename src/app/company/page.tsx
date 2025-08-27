@@ -6,66 +6,77 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalFooter,
-} from '@/components/ui/modal';
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table';
-import { Plus, LogOut, Edit, Trash } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
+import CitySelector from '@/components/homepage/city-selector';
+import { City, Company, Trip } from '@/generated/prisma';
+import ReservationsTab from '@/components/company/ReservationsTab';
+import RoutesTab from '@/components/company/RoutesTab';
+import SettingsTab from '@/components/company/SettingsTab';
+import TripsTab from '@/components/company/TripsTab';
 
-// NOTE: adjust imports above to match your project paths for shadcn components.
-
-type Trip = {
-  id: number;
-  routeId: number;
-  companyId: number;
-  departure: string; // ISO
-  arrival: string; // ISO
-  seatsTotal: number;
-  route?: {
-    id: number;
-    from: { id: number; name: string };
-    to: { id: number; name: string };
-  };
-};
+type Tab = 'trips' | 'routes' | 'reservations' | 'settings';
 
 export default function CompanyAdminDashboard() {
+  const [company, setCompany] = useState<Company | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [routes, setRoutes] = useState<any[]>([]);
+
+  const [activeTab, setActiveTab] = useState<Tab>('trips');
+  const [hydrated, setHydrated] = useState(false); // NEW: prevent flicker
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [routeFrom, setRouteFrom] = useState('');
-  const [routeTo, setRouteTo] = useState('');
-  const [companyId, setCompanyId] = useState<number | null>(null);
   const [departureDate, setDepartureDate] = useState('');
   const [departureTime, setDepartureTime] = useState('10:00');
   const [arrivalDate, setArrivalDate] = useState('');
   const [arrivalTime, setArrivalTime] = useState('12:30');
   const [seatsTotal, setSeatsTotal] = useState(50);
+  const [fromCity, setFromCity] = React.useState<City | null>(null);
+  const [toCity, setToCity] = React.useState<City | null>(null);
 
   useEffect(() => {
-    fetchTrips();
+    const savedTab = localStorage.getItem('activeTab') as Tab | null;
+    if (savedTab) setActiveTab(savedTab);
+    setHydrated(true);
   }, []);
 
-  async function fetchTrips() {
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchCompanyAndTrips();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'routes' && routes.length === 0) fetchRoutes();
+  }, [activeTab]);
+
+  async function fetchCompanyAndTrips() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/trip', { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch trips');
+      const res = await fetch('/api/company', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch company data');
       const data = await res.json();
-      setTrips(data);
+      setCompany(data);
+      setTrips(data.trips || []);
+    } catch (err: any) {
+      setError(err.message || 'Error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchRoutes() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/routes', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch routes');
+      const data = await res.json();
+      setRoutes(data);
     } catch (err: any) {
       setError(err.message || 'Error');
     } finally {
@@ -74,7 +85,6 @@ export default function CompanyAdminDashboard() {
   }
 
   function combineToUtcIso(date: string, time: string) {
-    // Interpret provided date/time as local wall-clock in Europe/Belgrade and convert to UTC.
     const dt = DateTime.fromISO(`${date}T${time}`, {
       zone: 'Europe/Belgrade',
     }).toUTC();
@@ -85,31 +95,22 @@ export default function CompanyAdminDashboard() {
     e.preventDefault();
     setError(null);
 
-    if (
-      !routeFrom ||
-      !routeTo ||
-      !departureDate ||
-      !arrivalDate ||
-      !companyId
-    ) {
-      setError('Please fill required fields');
+    if (!fromCity || !toCity || !departureDate || !arrivalDate) {
+      setError('Obavezna polja nisu popunjena');
       return;
     }
 
     try {
-      // We first ensure route exists (backend route handler will create if missing, per your API)
       const departureIso = combineToUtcIso(departureDate, departureTime);
       const arrivalIso = combineToUtcIso(arrivalDate, arrivalTime);
 
       const payload = {
-        fromId: undefined, // we don't have IDs on client; backend will find/create by names if you adapt
-        toId: undefined,
-        fromName: routeFrom,
-        toName: routeTo,
-        companyId,
+        fromId: fromCity.id,
+        toId: toCity.id,
         departure: departureIso,
         arrival: arrivalIso,
         seatsTotal,
+        companyId: company!.id,
       };
 
       const res = await fetch('/api/trip', {
@@ -125,35 +126,51 @@ export default function CompanyAdminDashboard() {
       }
 
       setCreateOpen(false);
-      await fetchTrips();
+      await fetchCompanyAndTrips();
     } catch (err: any) {
       setError(err.message || 'Error creating trip');
     }
   }
 
-  async function handleDeleteTrip(id: number) {
-    if (!confirm('Da li ste sigurni da želite obrisati ovu vožnju?')) return;
-    try {
-      const res = await fetch('/api/trip', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error('Failed to delete trip');
-      await fetchTrips();
-    } catch (err: any) {
-      setError(err.message || 'Error');
+  function renderTab() {
+    switch (activeTab) {
+      case 'trips':
+        return (
+          <TripsTab
+            trips={trips}
+            loading={loading}
+            error={error}
+            refreshTrips={fetchCompanyAndTrips}
+          />
+        );
+      case 'routes':
+        return (
+          <RoutesTab
+            routes={routes}
+            loading={loading}
+            error={error}
+            refreshRoutes={fetchCompanyAndTrips}
+          />
+        );
+      case 'reservations':
+        return (
+          <ReservationsTab
+            trips={trips}
+            loading={loading}
+            error={error}
+            refreshReservations={fetchCompanyAndTrips}
+          />
+        );
+      case 'settings':
+        return <SettingsTab loading={loading} error={error} />;
+      default:
+        return null;
     }
   }
 
   async function handleLogout() {
     try {
-      await fetch('/api/company/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      // simple client redirect
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
       window.location.href = '/';
     } catch {
       window.location.href = '/';
@@ -163,13 +180,13 @@ export default function CompanyAdminDashboard() {
   return (
     <div className="min-h-screen p-6 bg-slate-50">
       <header className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Company Admin</h2>
+        <h2 className="text-2xl font-bold">Dobrodosli {company?.name}</h2>
         <div className="flex items-center gap-3">
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> New Trip
+            <Plus className="mr-2 h-4 w-4" /> Nova Ruta
           </Button>
           <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" /> Logout
+            <LogOut className="mr-2 h-4 w-4" /> Izloguj se
           </Button>
         </div>
       </header>
@@ -178,14 +195,26 @@ export default function CompanyAdminDashboard() {
         <aside className="col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Manage</CardTitle>
+              <CardTitle>Uredi</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                <li className="text-sm">Trips ({trips.length})</li>
-                <li className="text-sm">Routes</li>
-                <li className="text-sm">Reservations</li>
-                <li className="text-sm">Company Settings</li>
+                {(['trips', 'routes', 'reservations', 'settings'] as Tab[]).map(
+                  (tab) => (
+                    <li
+                      key={tab}
+                      className={`text-sm cursor-pointer ${
+                        activeTab === tab ? 'font-bold' : ''
+                      }`}
+                      onClick={() => setActiveTab(tab)}
+                    >
+                      {tab === 'trips' && 'Rute'}
+                      {tab === 'routes' && 'Putanje'}
+                      {tab === 'reservations' && 'Rezervacije'}
+                      {tab === 'settings' && 'Podesavanja'}
+                    </li>
+                  )
+                )}
               </ul>
             </CardContent>
           </Card>
@@ -193,64 +222,17 @@ export default function CompanyAdminDashboard() {
 
         <section className="col-span-1 lg:col-span-3">
           <Card>
-            <CardHeader>
-              <CardTitle>Trips</CardTitle>
-            </CardHeader>
             <CardContent>
-              {loading ? (
-                <p>Loading...</p>
-              ) : error ? (
-                <p className="text-red-500">{error}</p>
+              {hydrated ? (
+                loading ? (
+                  <p>Učitavanje...</p>
+                ) : error ? (
+                  <p className="text-red-500">{error}</p>
+                ) : (
+                  renderTab()
+                )
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full table-auto">
-                    <thead>
-                      <tr className="text-left">
-                        <th className="p-2">ID</th>
-                        <th className="p-2">Route</th>
-                        <th className="p-2">Departure (local)</th>
-                        <th className="p-2">Arrival (local)</th>
-                        <th className="p-2">Seats</th>
-                        <th className="p-2">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {trips.map((t) => {
-                        const depLocal = DateTime.fromISO(t.departure)
-                          .setZone('Europe/Belgrade')
-                          .toFormat('yyyy-LL-dd HH:mm');
-                        const arrLocal = DateTime.fromISO(t.arrival)
-                          .setZone('Europe/Belgrade')
-                          .toFormat('yyyy-LL-dd HH:mm');
-                        return (
-                          <tr key={t.id} className="border-t">
-                            <td className="p-2">{t.id}</td>
-                            <td className="p-2">
-                              {t.route
-                                ? `${t.route.from.name} → ${t.route.to.name}`
-                                : `Route ${t.routeId}`}
-                            </td>
-                            <td className="p-2">{depLocal}</td>
-                            <td className="p-2">{arrLocal}</td>
-                            <td className="p-2">{t.seatsTotal}</td>
-                            <td className="p-2 flex gap-2">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleDeleteTrip(t.id)}
-                              >
-                                <Trash className="h-4 w-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <p>Učitavanje...</p>
               )}
             </CardContent>
           </Card>
@@ -261,30 +243,23 @@ export default function CompanyAdminDashboard() {
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-            <h3 className="text-lg font-semibold mb-4">Create Trip</h3>
+            <h3 className="text-lg font-semibold mb-4">Napravi Rutu</h3>
             <form
               onSubmit={handleCreateTrip}
               className="grid grid-cols-2 gap-4"
             >
+              <CitySelector
+                label="Od"
+                selectedCity={fromCity}
+                setSelectedCity={setFromCity}
+              />
+              <CitySelector
+                label="Do"
+                selectedCity={toCity}
+                setSelectedCity={setToCity}
+              />
               <div>
-                <Label>From (city name)</Label>
-                <Input
-                  value={routeFrom}
-                  onChange={(e) => setRouteFrom(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Label>To (city name)</Label>
-                <Input
-                  value={routeTo}
-                  onChange={(e) => setRouteTo(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label>Departure date</Label>
+                <Label>Datum polaska</Label>
                 <Input
                   type="date"
                   value={departureDate}
@@ -293,7 +268,7 @@ export default function CompanyAdminDashboard() {
                 />
               </div>
               <div>
-                <Label>Departure time</Label>
+                <Label>Vreme polaska</Label>
                 <Input
                   type="time"
                   value={departureTime}
@@ -301,9 +276,8 @@ export default function CompanyAdminDashboard() {
                   required
                 />
               </div>
-
               <div>
-                <Label>Arrival date</Label>
+                <Label>Datum dolaska</Label>
                 <Input
                   type="date"
                   value={arrivalDate}
@@ -312,7 +286,7 @@ export default function CompanyAdminDashboard() {
                 />
               </div>
               <div>
-                <Label>Arrival time</Label>
+                <Label>Vreme dolaska</Label>
                 <Input
                   type="time"
                   value={arrivalTime}
@@ -320,18 +294,8 @@ export default function CompanyAdminDashboard() {
                   required
                 />
               </div>
-
               <div>
-                <Label>Company ID</Label>
-                <Input
-                  type="number"
-                  value={companyId ?? ''}
-                  onChange={(e) => setCompanyId(Number(e.target.value))}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Seats total</Label>
+                <Label>Ukupan broj sedista</Label>
                 <Input
                   type="number"
                   value={seatsTotal}
@@ -339,16 +303,15 @@ export default function CompanyAdminDashboard() {
                   required
                 />
               </div>
-
               <div className="col-span-2 flex justify-end gap-2 mt-2">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setCreateOpen(false)}
                 >
-                  Cancel
+                  Otkazi
                 </Button>
-                <Button type="submit">Create</Button>
+                <Button type="submit">Napravi</Button>
               </div>
             </form>
           </div>

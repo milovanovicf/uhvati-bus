@@ -1,19 +1,25 @@
-import Hero from '@/components/homepage/hero';
+import { redirect } from 'next/navigation';
 import Header from '../components/homepage/header';
-import Services from '@/components/homepage/services';
-import MissionSection from '@/components/homepage/mission';
-import Footer from '@/components/homepage/footer';
-import HowItWorks from '@/components/homepage/how-it-works';
-import FAQ from '@/components/homepage/faq';
+import Footer from '../components/homepage/footer';
+import FAQ from '../components/homepage/faq';
+import Hero from '../components/homepage/hero';
+import HowItWorks from '../components/homepage/how-it-works';
+import MissionSection from '../components/homepage/mission';
+import Services from '../components/homepage/services';
+import { getCompanyFromToken } from './api/lib/auth';
 
-const routes = [];
+export default async function HomePage() {
+  const company = await getCompanyFromToken();
 
-export default function HomePage() {
+  if (company) {
+    redirect('/company');
+  }
+
   return (
     <>
       <Header />
       <main>
-        <Hero routes={routes} />
+        <Hero />
         <Services />
         <MissionSection />
         <HowItWorks />

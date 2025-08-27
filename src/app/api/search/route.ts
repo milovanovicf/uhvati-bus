@@ -1,5 +1,4 @@
 import prisma from '@/lib/prisma';
-import { log } from 'console';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -7,10 +6,8 @@ export async function GET(req: NextRequest) {
 
   const fromId = searchParams.get('fromId');
   const toId = searchParams.get('toId');
-  const date = searchParams.get('date'); // Expected format: 'YYYY-MM-DD'
-  console.log(fromId, toId, date);
+  const date = searchParams.get('date');
 
-  // Basic validation
   if (!fromId || !toId || !date) {
     return NextResponse.json(
       { error: 'Missing fromId, toId, or date in query params' },
@@ -18,7 +15,6 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Build date range (00:00 to 23:59 of the selected day)
   const startDate = new Date(date);
   const endDate = new Date(new Date(date).setHours(23, 59, 59, 999));
 

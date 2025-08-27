@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { testServer } from '@/app/api/lib/testServer';
-import * as handler from '@/app/api/reserve/route';
+import * as handler from '@/app/api/reservations/route';
 import prisma from '@/lib/prisma';
 import { City, Company, Trip, Route } from '@/generated/prisma';
 import bcrypt from 'bcrypt';

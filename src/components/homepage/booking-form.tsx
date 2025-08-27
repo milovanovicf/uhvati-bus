@@ -15,7 +15,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CitySelector from './city-selector';
-import prisma from '@/lib/prisma';
 import { City, Route } from '@/generated/prisma';
 const { DateTime } = require('luxon');
 
@@ -24,22 +23,17 @@ type RouteWithCities = Route & {
   to: City;
 };
 
-type BookingFormProps = {
-  routes: RouteWithCities[];
-};
-
-export default function BookingForm({ routes }: BookingFormProps) {
+export default function BookingForm() {
   const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [seats, setSeats] = useState(1);
 
-  const selectedRoute = routes.find((route) => route.id === selectedRouteId);
   const [date, setDate] = React.useState<Date | undefined>();
   const [open, setOpen] = React.useState(false);
   const [time, setTime] = React.useState('10:30');
-  const [fromCity, setFromCity] = React.useState<string | null>(null);
-  const [toCity, setToCity] = React.useState<string | null>(null);
+  const [fromCity, setFromCity] = React.useState<City | null>(null);
+  const [toCity, setToCity] = React.useState<City | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,46 +43,27 @@ export default function BookingForm({ routes }: BookingFormProps) {
       return;
     }
 
-    const dbRoutes = await prisma.route.findMany({
-      include: {
-        from: true,
-        to: true,
-      },
-    });
-
-    // Find matching route
-    const matchingRoute = dbRoutes.find(
-      (route) => route.from.name === fromCity && route.to.name === toCity
-    );
-
-    if (!matchingRoute) {
-      alert('Nema dostupne rute za odabrane gradove.');
-      return;
-    }
-
     const payload = {
       fullName,
       email,
       date: DateTime.fromJSDate(date).toISODate(),
       time,
       seats,
-      routeId: matchingRoute.id,
+      fromCityId: fromCity.id,
+      toCityId: toCity.id,
     };
 
     try {
-      const response = await fetch('/api/reserve', {
+      const response = await fetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error('Greška prilikom rezervacije.');
-      }
+      if (!response.ok) throw new Error('Greška prilikom rezervacije.');
 
       const result = await response.json();
       alert('Uspešno ste rezervisali mesto!');
-      console.log('Reservation result:', result);
     } catch (error) {
       console.error('Reservation error:', error);
       alert('Došlo je do greške prilikom rezervacije.');
@@ -96,6 +71,7 @@ export default function BookingForm({ routes }: BookingFormProps) {
   }
 
   const formattedDate = date ? format(date, 'PPP', { locale: srLatn }) : '';
+
   return (
     <Card className="w-80">
       <CardHeader>
@@ -171,7 +147,6 @@ export default function BookingForm({ routes }: BookingFormProps) {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 step="60"
-                defaultValue="10:30"
                 className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none border p-2 rounded"
               />
             </div>
@@ -215,12 +190,6 @@ export default function BookingForm({ routes }: BookingFormProps) {
               Pogledaj rute
             </Button>
           </div>
-
-          {selectedRoute && (
-            <p className="text-sm text-gray-600">
-              Izabrana ruta: {selectedRoute.from.name} → {selectedRoute.to.name}
-            </p>
-          )}
         </form>
       </CardContent>
     </Card>
