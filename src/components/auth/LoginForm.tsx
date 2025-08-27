@@ -3,13 +3,17 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
-export default function LoginForm() {
+export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
     const res = await fetch('/api/login', {
       method: 'POST',
@@ -17,32 +21,34 @@ export default function LoginForm() {
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await res.json();
     if (!res.ok) {
-      alert(data.error || 'Greška pri prijavi');
-    } else {
-      alert('Uspešna prijava');
-      // maybe store token in localStorage or set cookie
+      const data = await res.json();
+      setError(data.error || 'Login failed');
+      return;
     }
+
+    onSuccess(); // ✅ closes the modal
+    router.push('/company'); // ✅ redirect after close
   };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4 max-w-sm">
+    <form onSubmit={handleSubmit}>
+      {error && <p className='text-red-500'>{error}</p>}
       <Input
-        type="email"
-        placeholder="Email"
+        type='email'
+        placeholder='Email'
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
       />
       <Input
-        type="password"
-        placeholder="Lozinka"
+        type='password'
+        placeholder='Lozinka'
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-      <Button type="submit">Prijavi se</Button>
+      <Button type='submit'>Prijavi se</Button>
     </form>
   );
 }

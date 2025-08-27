@@ -16,12 +16,14 @@ datasource db {
 
 model Reservation {
   id        Int      @id @default(autoincrement())
+  companyId Int
   fullName  String
   email     String
   seats     Json
   trip      Trip     @relation(fields: [tripId], references: [id])
   tripId    Int
   createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id])
 }
 
 model Trip {
@@ -36,23 +38,25 @@ model Trip {
   company      Company       @relation(fields: [companyId], references: [id])
   reservations Reservation[]
 
-  // Add unique constraint on companyId + departure to avoid duplicate trips
-  @@unique([companyId, departure])
+  @@unique([departure])
 }
 
 model Route {
-  id       Int  @id @default(autoincrement())
-  fromId   Int
-  toId     Int
-  from     City @relation("FromCity", fields: [fromId], references: [id])
-  to       City @relation("ToCity", fields: [toId], references: [id])
+  id        Int @id @default(autoincrement())
+  fromId    Int
+  toId      Int
+  companyId Int
+
+  from     City    @relation("FromCity", fields: [fromId], references: [id])
+  to       City    @relation("ToCity", fields: [toId], references: [id])
+  company  Company @relation(fields: [companyId], references: [id])
   distance Int? // km, optional
   duration Int? // minutes, optional
 
   trips    Trip[]
   Schedule Schedule[]
 
-  @@unique([fromId, toId])
+  @@unique([fromId, toId, companyId])
 }
 
 model City {
@@ -69,8 +73,10 @@ model Company {
   email    String @unique
   password String
 
-  trips    Trip[]
-  Schedule Schedule[]
+  trips       Trip[]
+  Schedule    Schedule[]
+  routes      Route[]
+  Reservation Reservation[]
 }
 
 enum Weekday {

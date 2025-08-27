@@ -28,28 +28,28 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleRegister} className="space-y-4 max-w-sm">
+    <form onSubmit={handleRegister} className='space-y-4 max-w-sm'>
       <Input
-        placeholder="Ime firme"
+        placeholder='Ime firme'
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
       />
       <Input
-        type="email"
-        placeholder="Email"
+        type='email'
+        placeholder='Email'
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
       />
       <Input
-        type="password"
-        placeholder="Lozinka"
+        type='password'
+        placeholder='Lozinka'
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-      <Button type="submit">Registruj se</Button>
+      <Button type='submit'>Registruj se</Button>
     </form>
   );
 }
