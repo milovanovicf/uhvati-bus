@@ -1,32 +1,42 @@
 import prisma from '@/lib/prisma';
 import { deleteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
+import { getCompanyFromToken } from '@/app/api/lib/auth';
 
 export async function GET() {
+  const company = await getCompanyFromToken();
+  if (!company) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const trips = await prisma.trip.findMany({
+    where: { company },
     include: {
-      company: true,
       route: {
-        include: {
-          from: true,
-          to: true,
+        select: {
+          from: { select: { name: true } },
+          to: { select: { name: true } },
         },
       },
     },
+    orderBy: { departure: 'asc' },
   });
+
   return NextResponse.json(trips);
 }
 
 export async function POST(req: NextRequest) {
+  const company = await getCompanyFromToken();
+  if (!company) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const data = await req.json();
 
-  // Expect data.fromId and data.toId (city IDs)
-  // Expect data.departure and data.arrival ISO date strings or timestamps
-
-  // Find or create Route for fromId and toId
   let route = await prisma.route.findUnique({
     where: {
-      fromId_toId: {
+      fromId_toId_companyId: {
+        companyId: company!.id,
         fromId: data.fromId,
         toId: data.toId,
       },
@@ -36,6 +46,7 @@ export async function POST(req: NextRequest) {
   if (!route) {
     route = await prisma.route.create({
       data: {
+        companyId: company!.id,
         fromId: data.fromId,
         toId: data.toId,
       },
@@ -51,6 +62,7 @@ export async function POST(req: NextRequest) {
       seatsTotal: data.seatsTotal,
     },
   });
+  console.log(trip);
 
   return NextResponse.json(trip);
 }

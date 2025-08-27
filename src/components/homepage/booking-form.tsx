@@ -15,31 +15,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CitySelector from './city-selector';
-import prisma from '@/lib/prisma';
-import { City, Route } from '@/generated/prisma';
+import { City } from '@/generated/prisma';
 const { DateTime } = require('luxon');
 
-type RouteWithCities = Route & {
-  from: City;
-  to: City;
-};
-
-type BookingFormProps = {
-  routes: RouteWithCities[];
-};
-
-export default function BookingForm({ routes }: BookingFormProps) {
-  const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
+export default function BookingForm() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [seats, setSeats] = useState(1);
 
-  const selectedRoute = routes.find((route) => route.id === selectedRouteId);
-  const [date, setDate] = React.useState<Date | undefined>();
-  const [open, setOpen] = React.useState(false);
-  const [time, setTime] = React.useState('10:30');
-  const [fromCity, setFromCity] = React.useState<string | null>(null);
-  const [toCity, setToCity] = React.useState<string | null>(null);
+  const [date, setDate] = useState<Date | undefined>(DateTime.now());
+  const [open, setOpen] = useState(false);
+  const [time, setTime] = useState('10:30');
+  const [fromCity, setFromCity] = useState<City | null>(null);
+  const [toCity, setToCity] = useState<City | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,46 +37,27 @@ export default function BookingForm({ routes }: BookingFormProps) {
       return;
     }
 
-    const dbRoutes = await prisma.route.findMany({
-      include: {
-        from: true,
-        to: true,
-      },
-    });
-
-    // Find matching route
-    const matchingRoute = dbRoutes.find(
-      (route) => route.from.name === fromCity && route.to.name === toCity
-    );
-
-    if (!matchingRoute) {
-      alert('Nema dostupne rute za odabrane gradove.');
-      return;
-    }
-
     const payload = {
       fullName,
       email,
       date: DateTime.fromJSDate(date).toISODate(),
       time,
       seats,
-      routeId: matchingRoute.id,
+      fromCityId: fromCity.id,
+      toCityId: toCity.id,
     };
 
     try {
-      const response = await fetch('/api/reserve', {
+      const response = await fetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error('Greška prilikom rezervacije.');
-      }
+      if (!response.ok) throw new Error('Greška prilikom rezervacije.');
 
       const result = await response.json();
       alert('Uspešno ste rezervisali mesto!');
-      console.log('Reservation result:', result);
     } catch (error) {
       console.error('Reservation error:', error);
       alert('Došlo je do greške prilikom rezervacije.');
@@ -96,6 +65,7 @@ export default function BookingForm({ routes }: BookingFormProps) {
   }
 
   const formattedDate = date ? format(date, 'PPP', { locale: srLatn }) : '';
+
   return (
     <Card className="w-80">
       <CardHeader>
@@ -171,7 +141,6 @@ export default function BookingForm({ routes }: BookingFormProps) {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 step="60"
-                defaultValue="10:30"
                 className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none border p-2 rounded"
               />
             </div>
@@ -206,21 +175,17 @@ export default function BookingForm({ routes }: BookingFormProps) {
           </div>
 
           <div className="flex gap-2">
-            <Button type="submit">Rezerviši</Button>
+            <Button type="submit" className="cursor-pointer">
+              Rezerviši
+            </Button>
             <Button
               type="submit"
               variant="outline"
-              className="bg-chart-4 text-white"
+              className="bg-chart-4 text-white cursor-pointer"
             >
               Pogledaj rute
             </Button>
           </div>
-
-          {selectedRoute && (
-            <p className="text-sm text-gray-600">
-              Izabrana ruta: {selectedRoute.from.name} → {selectedRoute.to.name}
-            </p>
-          )}
         </form>
       </CardContent>
     </Card>

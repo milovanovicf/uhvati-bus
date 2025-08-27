@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,19 +13,27 @@ import LoginForm from './LoginForm';
 export default function AuthModal({
   open,
   onClose,
+  mode: initialMode,
 }: {
   open: boolean;
   onClose: () => void;
+  mode: string;
 }) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState(initialMode);
 
   const switchMode = () => {
-    setMode((prev) => (prev === 'login' ? 'register' : 'login'));
+    setMode(mode === 'login' ? 'register' : 'login');
   };
+
+  useEffect(() => {
+    if (open) {
+      setMode(initialMode);
+    }
+  }, [open, initialMode]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className='max-w-md'>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
             {mode === 'login' ? 'Prijavi se' : 'Registruj se'}
@@ -38,18 +46,21 @@ export default function AuthModal({
           <RegisterForm onSuccess={onClose} />
         )}
 
-        <div className='text-sm text-center mt-4'>
+        <div className="text-sm text-center mt-4">
           {mode === 'login' ? (
             <>
               Nemaš nalog?
-              <button className='text-blue-600 underline' onClick={switchMode}>
+              <button className="text-blue-600 underline" onClick={switchMode}>
                 Registruj se
               </button>
             </>
           ) : (
             <>
               Već imaš nalog?
-              <button className='text-blue-600 underline' onClick={switchMode}>
+              <button
+                className="text-blue-600 underline cursor-pointer"
+                onClick={switchMode}
+              >
                 Prijavi se
               </button>
             </>

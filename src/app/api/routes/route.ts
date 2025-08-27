@@ -1,8 +1,14 @@
 import prisma from '@/lib/prisma';
 import { routeSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
+import { getCompanyFromToken } from '../lib/auth';
 
 export async function POST(req: NextRequest) {
+  const company = await getCompanyFromToken();
+
+  if (!company) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const body = await req.json();
 
@@ -10,7 +16,8 @@ export async function POST(req: NextRequest) {
 
     let route = await prisma.route.findUnique({
       where: {
-        fromId_toId: {
+        fromId_toId_companyId: {
+          companyId: company!.id,
           fromId: validated.fromId,
           toId: validated.toId,
         },
@@ -20,6 +27,7 @@ export async function POST(req: NextRequest) {
     if (!route) {
       route = await prisma.route.create({
         data: {
+          companyId: company!.id,
           fromId: validated.fromId,
           toId: validated.toId,
         },
@@ -33,4 +41,27 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+}
+
+export async function GET() {
+  const company = await getCompanyFromToken();
+
+  if (!company) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const routes = await prisma.route.findMany({
+    where: { companyId: company.id },
+    select: {
+      id: true,
+      from: {
+        select: { name: true },
+      },
+      to: {
+        select: { name: true },
+      },
+    },
+  });
+
+  return NextResponse.json(routes);
 }

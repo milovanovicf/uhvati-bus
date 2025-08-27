@@ -1,15 +1,18 @@
 import prisma from '@/lib/prisma';
 import { citySchema } from '@/lib/validation';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 export async function GET() {
   const cities = await prisma.city.findMany({
     select: { id: true, name: true },
+    orderBy: {
+      name: 'asc',
+    },
   });
   return NextResponse.json(cities);
 }
 
-export async function POST(req: NextResponse) {
+export async function POST(req: NextRequest) {
   const body = await req.json();
 
   const parseResult = citySchema.safeParse(body);

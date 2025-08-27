@@ -53,7 +53,7 @@ export default function Header() {
                 <li>
                   <button
                     onClick={() => openAuthModal('login')}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm"
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm cursor-pointer"
                   >
                     Uloguj firmu
                   </button>
@@ -61,7 +61,7 @@ export default function Header() {
                 <li>
                   <button
                     onClick={() => openAuthModal('register')}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm"
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm cursor-pointer"
                   >
                     Registruj firmu
                   </button>
@@ -69,7 +69,11 @@ export default function Header() {
               </ul>
             </NavigationMenuContent>
           </NavigationMenuItem>
-          <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+          <AuthModal
+            open={authOpen}
+            onClose={() => setAuthOpen(false)}
+            mode={authMode}
+          />
         </NavigationMenuList>
       </NavigationMenu>
 

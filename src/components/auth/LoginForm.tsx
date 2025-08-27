@@ -27,28 +27,30 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
       return;
     }
 
-    onSuccess(); // ✅ closes the modal
-    router.push('/company'); // ✅ redirect after close
+    onSuccess();
+    router.push('/company');
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {error && <p className='text-red-500'>{error}</p>}
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-sm">
+      {error && <p className="text-red-500">{error}</p>}
       <Input
-        type='email'
-        placeholder='Email'
+        type="email"
+        placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
       />
       <Input
-        type='password'
-        placeholder='Lozinka'
+        type="password"
+        placeholder="Lozinka"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-      <Button type='submit'>Prijavi se</Button>
+      <Button type="submit" className="cursor-pointer">
+        Prijavi se
+      </Button>
     </form>
   );
 }

@@ -38,7 +38,7 @@ model Trip {
   company      Company       @relation(fields: [companyId], references: [id])
   reservations Reservation[]
 
-  @@unique([departure])
+  @@unique([companyId, routeId, departure])
 }
 
 model Route {

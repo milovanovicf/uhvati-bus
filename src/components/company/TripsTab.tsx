@@ -1,7 +1,5 @@
-import { Edit, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardHeader, CardTitle, CardContent } from '../ui/card';
-import { Trip } from '@/generated/prisma';
 const { DateTime } = require('luxon');
 
 type TripWithRoute = {
@@ -98,15 +96,17 @@ export default function TripsTab({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEditTrip(t.id)}
+                            className="cursor-pointer"
                           >
-                            Edit
+                            Izmeni
                           </Button>
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteTrip(t.id)}
+                            className="cursor-pointer"
                           >
-                            Delete
+                            Obirisi
                           </Button>
                         </td>
                       </tr>

@@ -1,37 +1,53 @@
 import prisma from '@/lib/prisma';
 import { deleteSchema, reservationSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
+import { getCompanyFromToken } from '../lib/auth';
 const { DateTime } = require('luxon');
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const parseResult = reservationSchema.safeParse(body);
-  if (!parseResult.success) {
-    const errors = parseResult.error.errors.map((err) => ({
-      field: err.path.join('.'),
-      message: err.message,
-    }));
-    return NextResponse.json({ errors }, { status: 400 });
-  }
+  // const parseResult = reservationSchema.safeParse(body);
+  // if (!parseResult.success) {
+  //   const errors = parseResult.error.errors.map((err) => ({
+  //     field: err.path.join('.'),
+  //     message: err.message,
+  //   }));
+  //   return NextResponse.json({ errors }, { status: 400 });
+  // }
 
   const {
     fullName,
     email,
     seats: requestedSeatsCount,
-    routeId,
+    fromCityId,
+    toCityId,
     date,
     time,
   } = body;
 
-  const formatedDate = DateTime.fromISO(`${date}T${time}`, {
-    zone: 'utc',
-  }).toJSDate();
+  const departureDate = DateTime.fromISO(`${date}T${time}`, {
+    zone: 'local', // interpret what user entered as their *local* time
+  }).toUTC();
+
+  const route = await prisma.route.findFirst({
+    where: {
+      fromId: fromCityId,
+      toId: toCityId,
+    },
+  });
+
+  if (!route) {
+    return NextResponse.json(
+      { error: 'Ruta nije pronađena između odabranih gradova.' },
+      { status: 404 }
+    );
+  }
 
   const trip = await prisma.trip.findFirst({
     where: {
-      routeId: routeId,
-      departure: formatedDate,
+      routeId: route.id,
+      departure: departureDate.toJSDate(),
     },
     include: {
       reservations: true,
@@ -40,18 +56,15 @@ export async function POST(req: NextRequest) {
 
   if (!trip) {
     return NextResponse.json(
-      { error: 'Ruta nije pronadjena' },
+      { error: 'Nema polaska za ovu rutu u odabrano vreme.' },
       { status: 404 }
     );
   }
 
-  // Determine taken seats
   const takenSeats = new Set<number>();
-
   for (const reservation of trip.reservations) {
-    const seats = reservation.seats;
-    if (Array.isArray(seats)) {
-      for (const seat of seats) {
+    if (Array.isArray(reservation.seats)) {
+      for (const seat of reservation.seats) {
         takenSeats.add(seat as number);
       }
     }
@@ -61,7 +74,7 @@ export async function POST(req: NextRequest) {
 
   if (requestedSeatsCount > availableSeatsCount) {
     return NextResponse.json(
-      { error: 'Nema slobodnih sedista na ovoj ruti.' },
+      { error: 'Nema slobodnih sedišta na ovoj ruti.' },
       { status: 400 }
     );
   }
@@ -75,10 +88,21 @@ export async function POST(req: NextRequest) {
     seatNumber++;
   }
 
-  // Create reservation
+  const company = await prisma.company.findFirst({
+    where: { id: trip.companyId },
+  });
+
+  if (!company) {
+    return NextResponse.json(
+      { error: 'Ne postoji kompanija za odabrani polazak.' },
+      { status: 500 }
+    );
+  }
+
   const reservation = await prisma.reservation.create({
     data: {
       fullName,
+      companyId: company.id,
       email,
       seats: assignedSeats,
       tripId: trip.id,
@@ -86,7 +110,7 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
-    message: 'Rezervacija uspesna',
+    message: 'Rezervacija uspešna',
     reservation,
   });
 }
@@ -118,4 +142,29 @@ export async function DELETE(req: NextRequest) {
     message: 'Reservation canceled',
     reservation: deleted,
   });
+}
+
+export async function GET() {
+  const company = await getCompanyFromToken();
+  if (!company) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const reservations = await prisma.reservation.findMany({
+    where: { company },
+    include: {
+      trip: {
+        include: {
+          route: {
+            include: {
+              from: true,
+              to: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return NextResponse.json(reservations);
 }

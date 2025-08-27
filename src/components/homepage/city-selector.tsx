@@ -1,6 +1,7 @@
+'use client';
+
 import * as React from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
-
 import {
   Command,
   CommandEmpty,
@@ -15,18 +16,12 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
-const cities = [
-  'Beograd',
-  'Novi Sad',
-  'Niš',
-  'Subotica',
-  'Kragujevac',
-  'Zrenjanin',
-  'Čačak',
-  'Leskovac',
-  'Krusevac',
-];
+type City = {
+  id: number;
+  name: string;
+};
 
 export default function CitySelector({
   label,
@@ -34,10 +29,21 @@ export default function CitySelector({
   setSelectedCity,
 }: {
   label: string;
-  selectedCity: string | null;
-  setSelectedCity: (city: string) => void;
+  selectedCity: City | null;
+  setSelectedCity: (city: City) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [cities, setCities] = useState<City[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadCities = async () => {
+    if (cities.length > 0) return;
+    setLoading(true);
+    const res = await fetch('/api/cities');
+    const data = await res.json();
+    setCities(data);
+    setLoading(false);
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -48,22 +54,23 @@ export default function CitySelector({
             variant="outline"
             role="combobox"
             className="justify-between border p-2 rounded"
+            onClick={loadCities}
           >
-            {selectedCity || `Izaberi grad`}
+            {selectedCity?.name || `Izaberi grad`}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0">
+        <PopoverContent className="p-0 max-h-60 overflow-y-auto">
           <Command>
             <CommandInput placeholder="Pretrazi grad..." />
             <CommandEmpty>Grad nije pronadjen.</CommandEmpty>
             <CommandGroup>
               {cities.map((city) => (
                 <CommandItem
-                  key={city}
-                  value={city}
+                  key={city.id}
+                  value={city.name}
                   onSelect={(value) => {
-                    setSelectedCity(value);
+                    setSelectedCity(city);
                     setOpen(false);
                   }}
                 >
@@ -73,7 +80,7 @@ export default function CitySelector({
                       selectedCity === city ? 'opacity-100' : 'opacity-0'
                     )}
                   />
-                  {city}
+                  {city.name}
                 </CommandItem>
               ))}
             </CommandGroup>
