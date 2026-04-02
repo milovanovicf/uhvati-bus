@@ -5,7 +5,7 @@ import BookingForm from './booking-form';
 export default function Hero() {
   return (
     <div
-      className="relative flex items-center justify-end min-h-screen bg-cover bg-center px-5 py-15 sm:px-15 md:px-25 md:py-10 lg:px-40 lg:mb-20"
+      className="relative flex items-center justify-end min-h-screen bg-cover bg-center px-5 py-15 sm:px-15 md:px-25 md:py-10 lg:px-40"
       style={{ backgroundImage: "url('/hero-background.jpeg')" }}
     >
       <div className="absolute inset-0 bg-black/60 md:hidden"></div>

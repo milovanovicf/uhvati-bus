@@ -25,21 +25,21 @@ export default function Header() {
 
   return (
     <header className="border-b px-6 py-4 flex items-center justify-between sm:px-50 sm:py-10">
-      <div className="flex items-center gap-4">
+      <a className="flex items-center gap-4" href="/">
         <img src="/logo/logo-big.png" alt="Logo" className="h-10" />
-      </div>
+      </a>
 
       {/* Desktop Menu */}
       <NavigationMenu className="hidden md:flex gap-4 items-center">
         <NavigationMenuList>
           <NavigationMenuItem>
-            <NavigationMenuLink href="/about" className="text-md">
+            <NavigationMenuLink href="/o-nama" className="text-md">
               O nama
             </NavigationMenuLink>
           </NavigationMenuItem>
 
           <NavigationMenuItem>
-            <NavigationMenuLink href="/for-companies" className="text-md">
+            <NavigationMenuLink href="/za-firme" className="text-md">
               Za firme
             </NavigationMenuLink>
           </NavigationMenuItem>
@@ -98,12 +98,12 @@ export default function Header() {
       >
         <ul className="flex flex-col p-4 gap-2">
           <li>
-            <a href="/about" className="block py-2 text-md">
+            <a href="/o-nama" className="block py-2 text-md">
               O nama
             </a>
           </li>
           <li>
-            <a href="/about" className="block py-2 text-md">
+            <a href="/za-firme" className="block py-2 text-md">
               Za Firme
             </a>
           </li>

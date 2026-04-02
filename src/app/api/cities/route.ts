@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import { prisma } from '@/app/utils/db';
 import { citySchema } from '@/lib/validation';
 import { NextResponse, NextRequest } from 'next/server';
 

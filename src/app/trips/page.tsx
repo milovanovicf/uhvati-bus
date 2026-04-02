@@ -1,4 +1,6 @@
 import React from 'react';
+import Header from '@/components/homepage/header';
+import Footer from '@/components/homepage/footer';
 
 type City = {
   name: string;
@@ -18,37 +20,45 @@ type Trip = {
 
 const TripsPage = async () => {
   const res = await fetch('http://localhost:3000/api/trips', {
-    cache: 'no-store', // disables caching to get fresh data
+    cache: 'no-store',
   });
 
   const trips: Trip[] = await res.json();
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Available Trips</h1>
-      {trips.length === 0 ? (
-        <p>No trips available.</p>
-      ) : (
-        trips.map((trip) => (
-          <div
-            key={trip.id}
-            className="border rounded p-4 shadow-sm mb-4 bg-white"
-          >
-            <p>
-              <strong>{trip.route.from.name}</strong> →{' '}
-              <strong>{trip.route.to.name}</strong>
-            </p>
-            <p>Company: {trip.company.name}</p>
-            <p>
-              Departure: {new Date(trip.departure).toLocaleString()}
-              <br />
-              Arrival: {new Date(trip.arrival).toLocaleString()}
-            </p>
-            <p>Total Seats: {trip.seatsTotal}</p>
-          </div>
-        ))
-      )}
-    </main>
+    <>
+      <Header />
+      <main className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Svi polasci</h1>
+          {trips.length === 0 ? (
+            <p className="text-gray-600">Nema dostupnih polazaka.</p>
+          ) : (
+            trips.map((trip) => (
+              <div
+                key={trip.id}
+                className="border rounded-lg p-6 shadow-sm mb-4 bg-white hover:shadow-md transition-shadow"
+              >
+                <p className="text-lg">
+                  <strong className="text-xl">{trip.route.from.name}</strong>
+                  <span className="mx-3 text-gray-400">→</span>
+                  <strong className="text-xl">{trip.route.to.name}</strong>
+                </p>
+                <p className="text-gray-600 mt-2">Prevoznik: {trip.company.name}</p>
+                <p className="text-gray-600">
+                  Polazak: {new Date(trip.departure).toLocaleString('sr-RS')}
+                </p>
+                <p className="text-gray-600">
+                  Dolazak: {new Date(trip.arrival).toLocaleString('sr-RS')}
+                </p>
+                <p className="text-gray-600">Ukupno sedišta: {trip.seatsTotal}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 };
 

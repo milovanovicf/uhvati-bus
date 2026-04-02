@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import { prisma } from '@/app/utils/db';
 import { routeSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCompanyFromToken } from '../lib/auth';

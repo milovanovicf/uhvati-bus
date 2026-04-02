@@ -1,0 +1,250 @@
+### Create Kruševac
+POST http://localhost:3000/api/city
+Content-Type: application/json
+
+{
+  "name": "Kruševac"
+}
+
+### Create Beograd
+POST http://localhost:3000/api/city
+Content-Type: application/json
+
+{
+  "name": "Beograd"
+}
+
+
+### Create a route from Kruševac to Beograd
+POST http://localhost:3000/api/route
+Content-Type: application/json
+
+{
+  "fromId": 1,
+  "toId": 2,
+  "distance": 210,
+  "duration": 150
+}
+
+### Create a company if you don't have one yet
+POST http://localhost:3000/api/register
+Content-Type: application/json
+
+{
+  "name": "Lasta",
+  "email": "info@lasta.rs",
+  "password": "securepassword"
+}
+
+
+### 
+POST http://localhost:3000/api/trip
+Content-Type: application/json
+
+{
+  "fromId": 1,
+  "toId": 2,
+  "companyId": 1,
+  "departure": "2025-08-06T10:00:00.000Z",
+  "arrival": "2025-08-06T12:30:00.000Z",
+  "seatsTotal": 50,
+}
+
+
+###
+POST http://localhost:3000/api/reserve
+Content-Type: application/json
+
+{
+  "fullName": "Marko Markovic",
+  "email": "marko@example.com",
+  "seats": 2,
+  "routeId": 1,
+  "date": "2025-08-06",
+  "time": "14:00"
+}
+
+
+
+
+### Serbia cities creation
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Beograd"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Krusevac"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Novi Sad"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Niš"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Subotica"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Kragujevac"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Zrenjanin"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Čačak"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Leskovac"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Sombor"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Valjevo"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Šabac"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Vranje"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Pirot"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Pančevo"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Kraljevo"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Užice"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Novi Pazar"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Vršac"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Senta"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Kikinda"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Sremska Mitrovica"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Zaječar"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Požarevac"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Jagodina"}
+
+###
+
+POST http://localhost:3000/api/cities
+Content-Type: application/json
+
+{"name": "Bor"}

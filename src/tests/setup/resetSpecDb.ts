@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import { prisma } from '@/app/utils/db';
 
 export async function resetDatabase() {
   if (process.env.NODE_ENV !== 'test') {

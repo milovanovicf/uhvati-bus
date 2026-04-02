@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import {
   Command,
@@ -16,7 +17,6 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
 
 type City = {
   id: number;
@@ -27,23 +27,37 @@ export default function CitySelector({
   label,
   selectedCity,
   setSelectedCity,
+  excludeCityIds = [],
 }: {
   label: string;
   selectedCity: City | null;
   setSelectedCity: (city: City) => void;
+  excludeCityIds?: number[];
 }) {
   const [open, setOpen] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const loadCities = async () => {
-    if (cities.length > 0) return;
-    setLoading(true);
-    const res = await fetch('/api/cities');
-    const data = await res.json();
-    setCities(data);
-    setLoading(false);
-  };
+  const filteredCities = cities.filter(
+    (city) => !excludeCityIds.includes(city.id)
+  );
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/cities');
+        const data = await res.json();
+        setCities(data);
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCities();
+  }, []);
 
   return (
     <div className="flex flex-col gap-2">
@@ -53,37 +67,51 @@ export default function CitySelector({
           <Button
             variant="outline"
             role="combobox"
-            className="justify-between border p-2 rounded"
-            onClick={loadCities}
+            className="flex justify-between items-center border p-2 rounded w-full max-w-[180px]"
           >
-            {selectedCity?.name || `Izaberi grad`}
+            <span
+              title={selectedCity?.name}
+              className="overflow-hidden whitespace-nowrap text-ellipsis max-w-[140px] inline-block"
+            >
+              {selectedCity?.name || `Izaberi grad`}
+            </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="p-0 max-h-60 overflow-y-auto">
           <Command>
-            <CommandInput placeholder="Pretrazi grad..." />
-            <CommandEmpty>Grad nije pronadjen.</CommandEmpty>
-            <CommandGroup>
-              {cities.map((city) => (
-                <CommandItem
-                  key={city.id}
-                  value={city.name}
-                  onSelect={(value) => {
-                    setSelectedCity(city);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      selectedCity === city ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  {city.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandInput placeholder="Pretraži grad..." />
+
+            {loading ? (
+              <div className="p-4 text-sm text-muted-foreground">
+                Učitavanje gradova...
+              </div>
+            ) : cities.length === 0 ? (
+              <CommandEmpty>Grad nije pronađen.</CommandEmpty>
+            ) : (
+              <CommandGroup>
+                {filteredCities.map((city) => (
+                  <CommandItem
+                    key={city.id}
+                    value={city.name}
+                    onSelect={() => {
+                      setSelectedCity(city);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        selectedCity?.id === city.id
+                          ? 'opacity-100'
+                          : 'opacity-0'
+                      )}
+                    />
+                    {city.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
