@@ -4,7 +4,7 @@ import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
-import { Company, Trip, Route } from '@/generated/prisma';
+import { Company } from '@/generated/prisma';
 import TripsTab from './TripsTab';
 import RoutesTab from './RoutesTab';
 import ReservationsTab from './ReservationsTab';
@@ -13,10 +13,44 @@ import CreateTripModal from './TripModal';
 
 type Tab = 'trips' | 'routes' | 'reservations' | 'settings';
 
+export type TripReservation = {
+  id: number;
+  fullName: string;
+  email: string;
+  seats: unknown;
+};
+
+export type TripWithDetails = {
+  id: number;
+  routeId: number;
+  companyId: number;
+  departure: string;
+  arrival: string;
+  seatsTotal: number;
+  seatsAvailable: number;
+  route: {
+    id: number;
+    from: { id: number; name: string };
+    to: { id: number; name: string };
+  };
+  reservations: TripReservation[];
+};
+
+export type RouteWithCities = {
+  id: number;
+  companyId: number;
+  fromId: number;
+  toId: number;
+  distance: number | null;
+  duration: number | null;
+  from: { name: string };
+  to: { name: string };
+};
+
 interface DashboardClientProps {
   company: Company;
-  initialTrips: Trip[];
-  initialRoutes: Route[];
+  initialTrips: TripWithDetails[];
+  initialRoutes: RouteWithCities[];
 }
 
 export default function DashboardClient({
@@ -39,7 +73,13 @@ export default function DashboardClient({
       case 'trips':
         return <TripsTab trips={initialTrips} isPending={isPending} />;
       case 'routes':
-        return <RoutesTab routes={initialRoutes} isPending={isPending} />;
+        return (
+          <RoutesTab
+            routes={initialRoutes}
+            trips={initialTrips}
+            isPending={isPending}
+          />
+        );
       case 'reservations':
         return <ReservationsTab trips={initialTrips} isPending={isPending} />;
       case 'settings':
@@ -83,7 +123,7 @@ export default function DashboardClient({
                         {tab === 'settings' && 'Podešavanja'}
                       </button>
                     </li>
-                  )
+                  ),
                 )}
               </ul>
             </CardContent>
@@ -106,11 +146,9 @@ export default function DashboardClient({
         </section>
       </main>
 
-      {/* Create Trip Modal */}
       <CreateTripModal
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
-        companyId={company.id}
       />
     </>
   );

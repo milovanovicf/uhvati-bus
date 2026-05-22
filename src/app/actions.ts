@@ -349,6 +349,29 @@ export async function deleteTrip(tripId: number) {
   revalidatePath('/dashboard');
 }
 
+export async function deleteRoute(routeId: number) {
+  const company = await getCurrentCompany();
+
+  const route = await prisma.route.findFirst({
+    where: { id: routeId, companyId: company.id },
+    include: { trips: { select: { id: true } } },
+  });
+
+  if (!route) {
+    throw new Error('Ruta nije pronađena ili nemate dozvolu');
+  }
+
+  const tripIds = route.trips.map((t) => t.id);
+
+  await prisma.$transaction([
+    prisma.reservation.deleteMany({ where: { tripId: { in: tripIds } } }),
+    prisma.trip.deleteMany({ where: { routeId } }),
+    prisma.route.delete({ where: { id: routeId } }),
+  ]);
+
+  revalidatePath('/company');
+}
+
 export async function updateTrip(tripId: number, formData: FormData) {
   const company = await getCurrentCompany();
 

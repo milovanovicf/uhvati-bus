@@ -7,29 +7,10 @@ import React, { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 const { DateTime } = require('luxon');
 import { Trash2 } from 'lucide-react';
-
-type Reservation = {
-  id: number;
-  fullName: string;
-  email: string;
-  seats: number[];
-};
-
-type TripWithRouteAndReservations = {
-  id: number;
-  departure: Date;
-  arrival: Date;
-  seatsTotal: number;
-  routeId: number;
-  route: {
-    from: { name: string };
-    to: { name: string };
-  };
-  reservations: Reservation[];
-};
+import { TripReservation, TripWithDetails } from './CompanyClient';
 
 type ReservationsTabProps = {
-  trips: TripWithRouteAndReservations[];
+  trips: TripWithDetails[];
   isPending: boolean;
 };
 
@@ -43,7 +24,7 @@ export default function ReservationsTab({
 
   async function handleDeleteReservation(id: number) {
     const isConfirmed = confirm(
-      'Da li ste sigurni da želite da obrišete ovu rezervaciju?'
+      'Da li ste sigurni da želite da obrišete ovu rezervaciju?',
     );
 
     if (!isConfirmed) {
@@ -88,7 +69,7 @@ export default function ReservationsTab({
             <tbody>
               {trips.map((trip) => {
                 const departure = DateTime.fromJSDate(trip.departure);
-                const arival = DateTime.fromJSDate(trip.departure);
+                const arival = DateTime.fromJSDate(trip.arrival);
 
                 const formattedDeparture = departure
                   .setLocale('sr-Latn')
@@ -112,9 +93,7 @@ export default function ReservationsTab({
                       <td className="p-2"></td>
                     </tr>
 
-                    {trip.reservations.map((r: Reservation, i: number) => {
-                      console.log(r);
-
+                    {trip.reservations.map((r: TripReservation, i: number) => {
                       return (
                         <tr key={r.id} className="border-t">
                           <td className="p-2 pl-6" colSpan={3}>
@@ -122,7 +101,9 @@ export default function ReservationsTab({
                             {r.fullName} - {r.email}
                           </td>
                           <td className="p-2">
-                            {Array.isArray(r.seats) ? r.seats.join(', ') : ''}
+                            {Array.isArray(r.seats)
+                              ? (r.seats as number[]).join(', ')
+                              : ''}
                           </td>
                           <td className="p-2">
                             <Button

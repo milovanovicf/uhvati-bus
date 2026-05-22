@@ -1,29 +1,74 @@
+'use client';
+
 import { CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Edit, Trash } from 'lucide-react';
 import { Button } from '../ui/button';
-
-type RouteWithCities = {
-  id: number;
-  from: { name: string };
-  to: { name: string };
-  distance?: number | null;
-  duration?: number | null;
-};
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { deleteRoute } from '@/app/actions';
+import EditRouteModal from './EditRouteModal';
+import { TripWithDetails, RouteWithCities } from './CompanyClient';
+import { RouteGroup } from './EditRouteModal';
 
 type RoutesTabProps = {
   routes: RouteWithCities[];
+  trips: TripWithDetails[];
   isPending: boolean;
-  error: string | null;
-  refreshRoutes: () => Promise<void>; // optional for actions like delete
+  error?: string | null;
+  refreshRoutes?: () => Promise<void>;
 };
 
-export default function RoutesTab({ routes, isPending }: RoutesTabProps) {
-  function handleEditRoute(id: number): void {
-    throw new Error('Function not implemented.');
+export default function RoutesTab({
+  routes,
+  trips,
+  isPending,
+}: RoutesTabProps) {
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<RouteGroup | null>(null);
+  const [deletePending, startDeleteTransition] = useTransition();
+  const router = useRouter();
+
+  function buildRouteGroup(route: RouteWithCities): RouteGroup {
+    const routeTrips = trips.filter((t) => t.routeId === route.id);
+    return {
+      routeId: route.id,
+      fromCity: route.from.name,
+      toCity: route.to.name,
+      trips: routeTrips,
+      totalSeats: routeTrips.reduce((sum, t) => sum + t.seatsTotal, 0),
+      availableSeats: routeTrips.reduce(
+        (sum, t) => sum + (t.seatsAvailable ?? 0),
+        0,
+      ),
+      totalReservations: routeTrips.reduce(
+        (sum, t) => sum + (t.reservations?.length ?? 0),
+        0,
+      ),
+    };
   }
 
-  function handleDeleteRoute(id: number): void {
-    throw new Error('Function not implemented.');
+  function handleEditRoute(route: RouteWithCities) {
+    setSelectedRoute(buildRouteGroup(route));
+    setEditModalOpen(true);
+  }
+
+  function handleDeleteRoute(id: number) {
+    const confirmed = confirm(
+      'Da li ste sigurni da želite da obrišete ovu rutu? Sva putovanja i rezervacije će biti trajno obrisane.',
+    );
+    if (!confirmed) return;
+
+    startDeleteTransition(async () => {
+      try {
+        await deleteRoute(id);
+        router.refresh();
+      } catch (error) {
+        alert(
+          'Greška pri brisanju rute: ' +
+            (error instanceof Error ? error.message : 'Nepoznata greška'),
+        );
+      }
+    });
   }
 
   if (isPending) {
@@ -65,7 +110,8 @@ export default function RoutesTab({ routes, isPending }: RoutesTabProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleEditRoute(r.id)}
+                      onClick={() => handleEditRoute(r)}
+                      disabled={deletePending}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -73,8 +119,13 @@ export default function RoutesTab({ routes, isPending }: RoutesTabProps) {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDeleteRoute(r.id)}
+                      disabled={deletePending}
                     >
-                      <Trash className="h-4 w-4" />
+                      {deletePending ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <Trash className="h-4 w-4" />
+                      )}
                     </Button>
                   </td>
                 </tr>
@@ -83,6 +134,17 @@ export default function RoutesTab({ routes, isPending }: RoutesTabProps) {
           </table>
         </div>
       </CardContent>
+
+      {selectedRoute && (
+        <EditRouteModal
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedRoute(null);
+          }}
+          route={selectedRoute}
+        />
+      )}
     </>
   );
 }
