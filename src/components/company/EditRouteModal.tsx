@@ -12,24 +12,15 @@ import {
 } from '@/components/ui/dialog';
 import { Clock, Plus, Trash2, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
-import { srLatn } from 'date-fns/locale';
 import { DateTime } from 'luxon';
 import { deleteTrip, createMultipleTrips } from '@/app/actions';
+import { TripWithDetails } from './CompanyClient';
 
-interface Trip {
-  id: number;
-  departure: string;
-  arrival: string;
-  seatsTotal: number;
-  seatsAvailable?: number;
-  reservations?: any[];
-}
-
-interface RouteGroup {
+export interface RouteGroup {
   routeId: number;
   fromCity: string;
   toCity: string;
-  trips: Trip[];
+  trips: TripWithDetails[];
   totalSeats: number;
   availableSeats: number;
   totalReservations: number;
@@ -69,7 +60,7 @@ export default function EditRouteModal({
         arrivalTime: format(new Date(trip.arrival), 'HH:mm'),
         duration: calculateDuration(
           format(new Date(trip.departure), 'HH:mm'),
-          format(new Date(trip.arrival), 'HH:mm')
+          format(new Date(trip.arrival), 'HH:mm'),
         ),
         tripId: trip.id,
       }));
@@ -127,7 +118,7 @@ export default function EditRouteModal({
   const updateTimeSlot = (
     id: string,
     field: keyof TimeSlot,
-    value: string | number
+    value: string | number,
   ) => {
     setTimeSlots((prevSlots) => {
       const updatedSlots = prevSlots.map((slot) => {
@@ -143,7 +134,7 @@ export default function EditRouteModal({
               field === 'arrivalTime' ? (value as string) : slot.arrivalTime;
             updatedSlot.duration = calculateDuration(
               departureTime,
-              arrivalTime
+              arrivalTime,
             );
           }
 
@@ -182,7 +173,7 @@ export default function EditRouteModal({
             }) ` +
               `se preklapa sa polaskom #${j + 1} (${slot2.departureTime} - ${
                 slot2.arrivalTime
-              })`
+              })`,
           );
         }
       }
@@ -221,7 +212,7 @@ export default function EditRouteModal({
         // Delete removed trips
         const currentTripIds = existingTrips.map((slot) => slot.tripId!);
         const tripsToDelete = route.trips.filter(
-          (trip) => !currentTripIds.includes(trip.id)
+          (trip) => !currentTripIds.includes(trip.id),
         );
 
         for (const trip of tripsToDelete) {
@@ -263,7 +254,7 @@ export default function EditRouteModal({
     const dt = DateTime.fromISO(`${dateStr}T${time}`, {
       zone: 'Europe/Belgrade',
     }).toUTC();
-    return dt.toISO();
+    return dt.toISO()!;
   };
 
   const handleClose = () => {
@@ -355,7 +346,7 @@ export default function EditRouteModal({
                   {timeSlots.map((slot, index) => {
                     const overlaps = checkForOverlaps(timeSlots);
                     const hasOverlap = overlaps.some((overlap) =>
-                      overlap.includes(`Polazak #${index + 1}`)
+                      overlap.includes(`Polazak #${index + 1}`),
                     );
 
                     return (
@@ -400,7 +391,7 @@ export default function EditRouteModal({
                                 updateTimeSlot(
                                   slot.id,
                                   'departureTime',
-                                  e.target.value
+                                  e.target.value,
                                 );
                               }}
                               className="text-sm"
@@ -417,7 +408,7 @@ export default function EditRouteModal({
                                 updateTimeSlot(
                                   slot.id,
                                   'arrivalTime',
-                                  e.target.value
+                                  e.target.value,
                                 );
                               }}
                               className="text-sm"

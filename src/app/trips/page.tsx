@@ -1,29 +1,18 @@
 import React from 'react';
 import Header from '@/components/homepage/header';
 import Footer from '@/components/homepage/footer';
-
-type City = {
-  name: string;
-};
-
-type Trip = {
-  id: number;
-  departure: string;
-  arrival: string;
-  seatsTotal: number;
-  company: { name: string };
-  route: {
-    from: City;
-    to: City;
-  };
-};
+import { prisma } from '@/app/utils/db';
 
 const TripsPage = async () => {
-  const res = await fetch('http://localhost:3000/api/trips', {
-    cache: 'no-store',
+  const trips = await prisma.trip.findMany({
+    include: {
+      company: { select: { name: true } },
+      route: {
+        include: { from: true, to: true },
+      },
+    },
+    orderBy: { departure: 'asc' },
   });
-
-  const trips: Trip[] = await res.json();
 
   return (
     <>

@@ -4,15 +4,15 @@
 import React, { useTransition, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trip } from '@/generated/prisma';
 import { format } from 'date-fns';
 import { srLatn } from 'date-fns/locale';
 import { Trash2, Edit, Clock, Users, MapPin } from 'lucide-react';
 import { deleteTrip } from '@/app/actions';
 import EditRouteModal from './EditRouteModal';
+import { TripWithDetails } from './CompanyClient';
 
 interface TripsTabProps {
-  trips: Trip[];
+  trips: TripWithDetails[];
   isPending: boolean;
 }
 
@@ -20,7 +20,7 @@ interface RouteGroup {
   routeId: number;
   fromCity: string;
   toCity: string;
-  trips: Trip[];
+  trips: TripWithDetails[];
   totalSeats: number;
   availableSeats: number;
   totalReservations: number;

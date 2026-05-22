@@ -1,9 +1,11 @@
+import { Company } from '@/generated/prisma';
+
 export default function SettingsTab({
-  loading,
-  error,
+  company,
+  isPending,
 }: {
-  loading: boolean;
-  error: string | null;
+  company: Company;
+  isPending: boolean;
 }) {
   return <div>Podesavanja (work in progress)</div>;
 }

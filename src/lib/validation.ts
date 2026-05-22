@@ -38,7 +38,26 @@ export const routeSchema = z
     path: ['toId'],
   });
 
-export const tripSchema = z.object({});
+export const tripSchema = z
+  .object({
+    fromId: z.number().int().positive(),
+    toId: z.number().int().positive(),
+    departure: z.string().min(1, { message: 'Departure is required' }),
+    arrival: z.string().min(1, { message: 'Arrival is required' }),
+    seatsTotal: z
+      .number()
+      .int()
+      .min(1, { message: 'At least 1 seat required' })
+      .max(200, { message: 'Cannot exceed 200 seats' }),
+  })
+  .refine((data) => new Date(data.departure) < new Date(data.arrival), {
+    message: 'Arrival must be after departure',
+    path: ['arrival'],
+  })
+  .refine((data) => data.fromId !== data.toId, {
+    message: 'Departure and destination cities must be different',
+    path: ['toId'],
+  });
 
 export const deleteSchema = z.object({
   id: z.number().int().positive(),
