@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,11 @@ export default function RoutesResults({
   date,
   time,
 }: RoutesResultsProps) {
+  const searchParams = useSearchParams();
+  const prefillFullName = searchParams.get('fullName') ?? '';
+  const prefillEmail = searchParams.get('email') ?? '';
+  const prefillSeats = Number(searchParams.get('seats') ?? 1);
+
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +53,29 @@ export default function RoutesResults({
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
 
+  const fetchTrips = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/trips?${new URLSearchParams({
+          fromId,
+          toId,
+          date,
+          ...(time && { time }),
+        })}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch trips');
+      const tripsData = await response.json();
+      setTrips(tripsData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  }, [fromId, toId, date, time]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Fetch cities and trips in parallel
         const [citiesResponse, tripsResponse] = await Promise.all([
           fetch('/api/cities'),
           fetch(
@@ -313,6 +336,10 @@ export default function RoutesResults({
         fromId={fromId}
         toId={toId}
         date={date}
+        defaultFullName={prefillFullName}
+        defaultEmail={prefillEmail}
+        defaultSeats={prefillSeats}
+        onSuccess={fetchTrips}
       />
     </div>
   );
