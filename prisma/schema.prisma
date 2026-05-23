@@ -52,8 +52,7 @@ model Route {
   distance Int? // km, optional
   duration Int? // minutes, optional
 
-  trips    Trip[]
-  Schedule Schedule[]
+  trips Trip[]
 
   @@unique([fromId, toId, companyId])
 }
@@ -73,29 +72,6 @@ model Company {
   password String
 
   trips       Trip[]
-  Schedule    Schedule[]
   routes      Route[]
   Reservation Reservation[]
-}
-
-enum Weekday {
-  Sunday
-  Monday
-  Tuesday
-  Wednesday
-  Thursday
-  Friday
-  Saturday
-}
-
-model Schedule {
-  id         Int     @id @default(autoincrement())
-  companyId  Int
-  routeId    Int
-  weekday    Weekday
-  time       String // "HH:mm" format, e.g. "08:00"
-  seatsTotal Int
-
-  company Company @relation(fields: [companyId], references: [id])
-  route   Route   @relation(fields: [routeId], references: [id])
 }

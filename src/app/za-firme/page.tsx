@@ -3,14 +3,21 @@
 import Header from '@/components/homepage/header';
 import Footer from '@/components/homepage/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Bus, MapPin, Calendar, Users, BarChart } from 'lucide-react';
+import {
+  CheckCircle,
+  Bus,
+  MapPin,
+  Calendar,
+  Users,
+  BarChart,
+} from 'lucide-react';
 
 const features = [
   {
     icon: MapPin,
     title: 'Dodajte rute',
     description:
-      'Kreirajte nove linije sa polazištem i odredištem. Svaka ruta može imati自定义 razdaljinu i prosečno trajanje putovanja.',
+      'Kreirajte nove linije sa polazištem i odredištem. Svaka ruta može imati razdaljinu i prosečno trajanje putovanja.',
   },
   {
     icon: Calendar,
@@ -71,8 +78,8 @@ export default function ForCompaniesPage() {
               Za firme
             </h1>
             <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-              UhvatBus platforma pruža vam alat za upravljanje autobuskim linijama,
-              polascima i rezervacijama — sve na jednom mestu.
+              UhvatBus platforma pruža vam alat za upravljanje autobuskim
+              linijama, polascima i rezervacijama — sve na jednom mestu.
             </p>
           </div>
         </section>
@@ -187,8 +194,8 @@ export default function ForCompaniesPage() {
               Spremni da se pridružite?
             </h2>
             <p className="text-xl text-orange-100 mb-8">
-              Registrujte svoju firmu i počnite da upravljate linijama već danas.
-              Brza registracija, instant pristup panelu.
+              Registrujte svoju firmu i počnite da upravljate linijama već
+              danas. Brza registracija, instant pristup panelu.
             </p>
             <a
               href="/?auth=register"
