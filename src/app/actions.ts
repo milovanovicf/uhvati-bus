@@ -5,6 +5,7 @@ import { prisma } from './utils/db';
 import { Reservation } from '@/generated/prisma';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 type ReservationState = {
   success: boolean;
@@ -14,7 +15,7 @@ type ReservationState = {
 };
 
 export async function handleReservationCreate(
-  prevState: ReservationState,
+  _prevState: ReservationState,
   formData: FormData
 ): Promise<ReservationState> {
   try {
@@ -506,4 +507,58 @@ export async function createMultipleTrips(tripsData: TripData[]) {
 
   revalidatePath('/company');
   return createdTrips;
+}
+
+export async function updateCompanySettings(formData: FormData) {
+  const company = await getCurrentCompany();
+
+  const name = (formData.get('name') as string)?.trim();
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
+  const currentPassword = (formData.get('currentPassword') as string) ?? '';
+  const newPassword = (formData.get('newPassword') as string) ?? '';
+  const confirmPassword = (formData.get('confirmPassword') as string) ?? '';
+
+  if (!name || !email) {
+    throw new Error('Naziv kompanije i email su obavezni.');
+  }
+
+  if (email !== company.email) {
+    const existing = await prisma.company.findUnique({ where: { email } });
+    if (existing) {
+      throw new Error('Email adresa je već u upotrebi.');
+    }
+  }
+
+  const changingPassword = currentPassword || newPassword || confirmPassword;
+
+  if (changingPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      throw new Error('Za promenu lozinke sva tri polja su obavezna.');
+    }
+    if (newPassword.length < 8) {
+      throw new Error('Nova lozinka mora imati najmanje 8 karaktera.');
+    }
+    if (newPassword !== confirmPassword) {
+      throw new Error('Nove lozinke se ne poklapaju.');
+    }
+
+    const row = await prisma.company.findUnique({ where: { id: company.id } });
+    const isValid = await bcrypt.compare(currentPassword, row!.password);
+    if (!isValid) {
+      throw new Error('Trenutna lozinka nije ispravna.');
+    }
+  }
+
+  const hashed = changingPassword ? await bcrypt.hash(newPassword, 10) : undefined;
+
+  await prisma.company.update({
+    where: { id: company.id },
+    data: {
+      name,
+      email,
+      ...(hashed && { password: hashed }),
+    },
+  });
+
+  revalidatePath('/company');
 }
