@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useActionState, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { srLatn } from 'date-fns/locale';
-import { ArrowLeftRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ArrowLeftRight, Calendar as CalendarIcon, HelpCircle } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -15,8 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CitySelector from './city-selector';
 import { City } from '@/generated/prisma';
-import { handleReservationCreate } from '@/app/actions';
-import { useFormStatus } from 'react-dom';
 import {
   Tooltip,
   TooltipContent,
@@ -24,130 +22,57 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip';
 const { DateTime } = require('luxon');
-import { HelpCircle } from 'lucide-react';
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="disabled:opacity-50 cursor-pointer"
-    >
-      {pending ? 'Rezervacija u toku...' : 'Rezerviši'}
-    </Button>
-  );
-}
 
 export default function BookingForm() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [open, setOpen] = useState(false);
   const [fromCity, setFromCity] = useState<City | null>(null);
   const [toCity, setToCity] = useState<City | null>(null);
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
-
-  const [state, formAction] = useActionState(handleReservationCreate, {
-    success: false,
-  });
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [seats, setSeats] = useState(1);
+  const [time, setTime] = useState('10:30');
 
   const formattedDate = date
     ? DateTime.fromJSDate(date).setLocale('sr-Latn').toFormat('d. LLL yyyy')
     : '';
 
-  // Handle URL parameters for pre-filling form
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromId = urlParams.get('fromId');
-    const toId = urlParams.get('toId');
-    const dateParam = urlParams.get('date');
-    const timeParam = urlParams.get('time');
-    const tripId = urlParams.get('tripId');
-
-    if (tripId) {
-      setSelectedTripId(tripId);
+  const handleSearch = () => {
+    if (!fromCity || !toCity || !date) {
+      alert('Molimo popunite sva polja pre pretrage ruta.');
+      return;
     }
 
-    if (dateParam) {
-      setDate(new Date(dateParam));
-    }
+    const params = new URLSearchParams({
+      fromId: fromCity.id.toString(),
+      toId: toCity.id.toString(),
+      date: DateTime.fromJSDate(date).toISODate() || '',
+      time,
+    });
 
-    if (timeParam) {
-      const timeInput = document.querySelector(
-        'input[name="time"]'
-      ) as HTMLInputElement;
-      if (timeInput) {
-        timeInput.value = timeParam;
-      }
-    }
+    if (fullName) params.set('fullName', fullName);
+    if (email) params.set('email', email);
+    params.set('seats', seats.toString());
 
-    // Load cities if IDs are provided
-    if (fromId || toId) {
-      const loadCities = async () => {
-        try {
-          const response = await fetch('/api/cities');
-          const cities = await response.json();
-
-          if (fromId) {
-            const fromCityData = cities.find(
-              (city: City) => city.id === parseInt(fromId)
-            );
-            if (fromCityData) setFromCity(fromCityData);
-          }
-
-          if (toId) {
-            const toCityData = cities.find(
-              (city: City) => city.id === parseInt(toId)
-            );
-            if (toCityData) setToCity(toCityData);
-          }
-        } catch (error) {
-          console.error('Error loading cities:', error);
-        }
-      };
-
-      loadCities();
-    }
-  }, []);
+    window.location.href = `/routes?${params}`;
+  };
 
   return (
     <Card className="w-90">
       <CardHeader>
-        <CardTitle>Rezervacija</CardTitle>
+        <CardTitle>Pretraga</CardTitle>
       </CardHeader>
 
       <CardContent className="px-5">
-        {state?.error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {state.error}
-          </div>
-        )}
-
-        {state?.success && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            Rezervacija uspešna! <br /> Broj sedišta:{' '}
-            {Array.isArray(state.reservation?.seats)
-              ? state.reservation?.seats.join(', ')
-              : '-'}
-          </div>
-        )}
-
-        {selectedTripId && (
-          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
-            <strong>Odabran specifičan polazak</strong> - rezervacija će biti
-            kreirana za ovaj polazak.
-          </div>
-        )}
-
-        <form className="space-y-4" action={formAction}>
+        <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">
               Ime i Prezime
             </label>
             <Input
               type="text"
-              name="fullName"
-              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               className="w-full border p-2 rounded"
               placeholder="Ime i Prezime"
             />
@@ -156,8 +81,8 @@ export default function BookingForm() {
             <label className="block text-sm font-medium mb-1">Email</label>
             <Input
               type="email"
-              name="email"
-              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border p-2 rounded"
               placeholder="Email"
             />
@@ -191,18 +116,8 @@ export default function BookingForm() {
                   />
                 </PopoverContent>
               </Popover>
-
-              {/* Hidden input for form submission  */}
-              {date && (
-                <input
-                  type="hidden"
-                  name="date"
-                  value={DateTime.fromJSDate(date).toISODate()}
-                />
-              )}
             </div>
 
-            {/* Time Picker */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="time-picker" className="px-1">
                 Vreme
@@ -210,10 +125,8 @@ export default function BookingForm() {
               <Input
                 type="time"
                 id="time-picker"
-                step="1"
-                name="time"
-                defaultValue="10:30:00"
-                required
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
                 className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none border p-2 rounded"
               />
             </div>
@@ -256,16 +169,6 @@ export default function BookingForm() {
                 excludeCityIds={fromCity ? [fromCity.id] : []}
               />
             </div>
-            {/* Hidden inputs for city IDs  */}
-            {fromCity && (
-              <input type="hidden" name="fromCityId" value={fromCity.id} />
-            )}
-            {toCity && (
-              <input type="hidden" name="toCityId" value={toCity.id} />
-            )}
-            {selectedTripId && (
-              <input type="hidden" name="tripId" value={selectedTripId} />
-            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -275,91 +178,36 @@ export default function BookingForm() {
               type="number"
               min={1}
               max={10}
-              name="seats"
-              required
-              defaultValue={1}
-              placeholder="Broj sedista"
+              value={seats}
+              onChange={(e) => setSeats(Number(e.target.value))}
               className="w-full border p-2 rounded"
             />
           </div>
-          <div className="flex gap-4">
-            <div className="flex flex-col items-start gap-1">
-              <div className="flex w-full justify-end">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 p-0"
-                      >
-                        <HelpCircle className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-s text-base bg-gray-600">
-                      <p>
-                        Klikom na <strong>Rezerviši</strong> automatski se bira
-                        prvi slobodan polazak najbliži odabranom vremenu.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <SubmitButton />
-            </div>
-
-            <div className="flex flex-col items-start gap-1">
-              <div className="flex w-full justify-end">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 p-0 "
-                      >
-                        <HelpCircle className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-s text-base bg-gray-600">
-                      <p>
-                        Klikom na <strong>Pogledaj rute</strong> videćete sve
-                        dostupne polaske za izabrani datum i vreme.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Button
-                className="bg-chart-4 text-white cursor-pointer"
-                onClick={() => {
-                  if (!fromCity || !toCity || !date) {
-                    alert('Molimo popunite sva polja pre pretrage ruta.');
-                    return;
-                  }
-
-                  const params = new URLSearchParams({
-                    fromId: fromCity.id.toString(),
-                    toId: toCity.id.toString(),
-                    date: DateTime.fromJSDate(date).toISODate() || '',
-                  });
-
-                  // Add time if provided
-                  const timeInput = document.querySelector(
-                    'input[name="time"]'
-                  ) as HTMLInputElement;
-                  if (timeInput && timeInput.value) {
-                    params.set('time', timeInput.value);
-                  }
-
-                  window.location.href = `/routes?${params}`;
-                }}
-              >
-                Pogledaj rute
-              </Button>
-            </div>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              className="bg-chart-4 text-white cursor-pointer"
+              onClick={handleSearch}
+            >
+              Pogledaj rute
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-s text-base bg-gray-600">
+                  <p>
+                    Klikom na <strong>Pogledaj rute</strong> videćete sve
+                    dostupne polaske za izabrani datum i vreme.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );

@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from './utils/db';
 import { Reservation } from '@/generated/prisma';
-const { DateTime } = require('luxon');
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
@@ -22,82 +21,30 @@ export async function handleReservationCreate(
     const fullName = formData.get('fullName') as string;
     const email = formData.get('email') as string;
     const requestedSeatsCount = Number(formData.get('seats'));
-    const fromCityId = Number(formData.get('fromCityId'));
-    const toCityId = Number(formData.get('toCityId'));
-    const date = formData.get('date') as string;
-    const time = formData.get('time') as string;
     const tripId = formData.get('tripId') as string;
-    if (
-      !fullName ||
-      !email ||
-      !requestedSeatsCount ||
-      !fromCityId ||
-      !toCityId ||
-      !date ||
-      !time
-    ) {
+
+    if (!fullName || !email || !requestedSeatsCount || !tripId) {
       return {
         success: false,
         error: 'Sva polja su obavezna.',
       };
     }
 
-    let trip;
+    const trip = await prisma.trip.findUnique({
+      where: {
+        id: Number(tripId),
+      },
+      include: {
+        reservations: true,
+        route: true,
+      },
+    });
 
-    if (tripId) {
-      // If specific trip ID is provided, use that trip
-      trip = await prisma.trip.findUnique({
-        where: {
-          id: Number(tripId),
-        },
-        include: {
-          reservations: true,
-          route: true,
-        },
-      });
-
-      if (!trip) {
-        return {
-          error: 'Odabrani polazak nije pronađen.',
-          success: false,
-        };
-      }
-    } else {
-      // Original logic for finding trip by route and time
-      const departureDate = DateTime.fromISO(`${date}T${time}`, {
-        zone: 'local',
-      }).toUTC();
-
-      const route = await prisma.route.findFirst({
-        where: {
-          fromId: fromCityId,
-          toId: toCityId,
-        },
-      });
-
-      if (!route) {
-        return {
-          error: 'Ruta nije pronađena između odabranih gradova.',
-          success: false,
-        };
-      }
-
-      trip = await prisma.trip.findFirst({
-        where: {
-          routeId: route.id,
-          departure: departureDate.toJSDate(),
-        },
-        include: {
-          reservations: true,
-        },
-      });
-
-      if (!trip) {
-        return {
-          error: 'Nema polaska za ovu rutu u odabrano vreme.',
-          success: false,
-        };
-      }
+    if (!trip) {
+      return {
+        error: 'Odabrani polazak nije pronađen.',
+        success: false,
+      };
     }
 
     const takenSeats = new Set<number>();
@@ -473,6 +420,15 @@ export async function createMultipleTrips(tripsData: TripData[]) {
     },
   });
 
+  const fmt = (d: Date) =>
+    d.toLocaleString('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
   // Check for overlaps
   for (const newTrip of newTrips) {
     // Check for exact duplicate
@@ -482,23 +438,19 @@ export async function createMultipleTrips(tripsData: TripData[]) {
 
     if (exactDuplicate) {
       throw new Error(
-        `Trip already exists for this route at ${newTrip.departure.toLocaleString()}`
+        `Polazak u ${fmt(newTrip.departure)} već postoji za ovu rutu.`
       );
     }
 
     // Check for overlapping trips
     const overlappingTrip = existingTrips.find((existing) => {
       return (
-        // New trip starts during existing trip
         (newTrip.departure >= existing.departure &&
           newTrip.departure < existing.arrival) ||
-        // New trip ends during existing trip
         (newTrip.arrival > existing.departure &&
           newTrip.arrival <= existing.arrival) ||
-        // New trip completely contains existing trip
         (newTrip.departure <= existing.departure &&
           newTrip.arrival >= existing.arrival) ||
-        // Existing trip completely contains new trip
         (existing.departure <= newTrip.departure &&
           existing.arrival >= newTrip.arrival)
       );
@@ -506,8 +458,9 @@ export async function createMultipleTrips(tripsData: TripData[]) {
 
     if (overlappingTrip) {
       throw new Error(
-        `Trip overlaps with existing trip (${overlappingTrip.departure.toLocaleString()} - ${overlappingTrip.arrival.toLocaleString()}). ` +
-          `Your trip: ${newTrip.departure.toLocaleString()} - ${newTrip.arrival.toLocaleString()}`
+        `Polazak od ${fmt(newTrip.departure)} do ${fmt(newTrip.arrival)} ` +
+          `preklapa se sa postojećim polaskom ` +
+          `${fmt(overlappingTrip.departure)} – ${fmt(overlappingTrip.arrival)}.`
       );
     }
   }
@@ -528,9 +481,9 @@ export async function createMultipleTrips(tripsData: TripData[]) {
 
       if (overlap) {
         throw new Error(
-          `Trips overlap with each other: ` +
-            `${trip1.departure.toLocaleString()} - ${trip1.arrival.toLocaleString()} and ` +
-            `${trip2.departure.toLocaleString()} - ${trip2.arrival.toLocaleString()}`
+          `Polasci se međusobno preklapaju: ` +
+            `${fmt(trip1.departure)} – ${fmt(trip1.arrival)} ` +
+            `i ${fmt(trip2.departure)} – ${fmt(trip2.arrival)}.`
         );
       }
     }

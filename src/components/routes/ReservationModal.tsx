@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +41,10 @@ interface ReservationModalProps {
   fromId: string;
   toId: string;
   date: string;
+  defaultFullName?: string;
+  defaultEmail?: string;
+  defaultSeats?: number;
+  onSuccess?: () => void;
 }
 
 export default function ReservationModal({
@@ -49,13 +54,29 @@ export default function ReservationModal({
   fromId,
   toId,
   date,
+  defaultFullName = '',
+  defaultEmail = '',
+  defaultSeats = 1,
+  onSuccess,
 }: ReservationModalProps) {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [seats, setSeats] = useState(1);
+  const router = useRouter();
+  const [fullName, setFullName] = useState(defaultFullName);
+  const [email, setEmail] = useState(defaultEmail);
+  const [seats, setSeats] = useState(defaultSeats);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Sync pre-fill values when the modal is opened
+  React.useEffect(() => {
+    if (isOpen) {
+      setFullName(defaultFullName);
+      setEmail(defaultEmail);
+      setSeats(defaultSeats);
+      setError(null);
+      setSuccess(false);
+    }
+  }, [isOpen, defaultFullName, defaultEmail, defaultSeats]);
 
   const formatTime = (dateString: string) => {
     return DateTime.fromISO(dateString).toFormat('HH:mm');
@@ -117,21 +138,17 @@ export default function ReservationModal({
 
         const result = await handleReservationCreate(
           { success: false },
-          formData
+          formData,
         );
 
         if (result.success) {
           setSuccess(true);
-          // Reset form
-          setFullName('');
-          setEmail('');
-          setSeats(1);
+          onSuccess?.();
 
-          // Close modal after 3 seconds
           setTimeout(() => {
             onClose();
             setSuccess(false);
-          }, 3000);
+          }, 1500);
         } else {
           setError(result.error || 'Greška pri kreiranju rezervacije');
         }
@@ -143,9 +160,6 @@ export default function ReservationModal({
 
   const handleClose = () => {
     if (!isPending) {
-      setFullName('');
-      setEmail('');
-      setSeats(1);
       setError(null);
       setSuccess(false);
       onClose();
@@ -168,9 +182,6 @@ export default function ReservationModal({
             </div>
             <div className="text-sm text-gray-600">
               Rezervacija je uspešno kreirana!
-            </div>
-            <div className="text-xs text-gray-500 mt-2">
-              Modal će se zatvoriti automatski...
             </div>
           </div>
         ) : (

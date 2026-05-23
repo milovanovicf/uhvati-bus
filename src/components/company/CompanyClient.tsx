@@ -24,8 +24,8 @@ export type TripWithDetails = {
   id: number;
   routeId: number;
   companyId: number;
-  departure: string;
-  arrival: string;
+  departure: Date;
+  arrival: Date;
   seatsTotal: number;
   seatsAvailable: number;
   route: {
