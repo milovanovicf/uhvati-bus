@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { getCompanyTrips, getCurrentCompany, getCompanyRoutes } from '../actions';
+import { getCompanyTrips, getCurrentCompany } from '../actions';
 import CompanyClient from '@/components/company/CompanyClient';
 import LogoutButton from '@/components/LogoutButton';
 import { LogIn, AlertCircle } from 'lucide-react';
@@ -9,7 +9,6 @@ export default async function CompanyDashboard() {
   try {
     const company = await getCurrentCompany();
     const trips = await getCompanyTrips();
-    const routes = await getCompanyRoutes();
 
     return (
       <div className="min-h-screen p-6 bg-slate-50">
@@ -21,7 +20,6 @@ export default async function CompanyDashboard() {
         <CompanyClient
           company={company}
           initialTrips={trips}
-          initialRoutes={routes}
         />
       </div>
     );

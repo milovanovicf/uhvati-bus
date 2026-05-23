@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { srLatn } from 'date-fns/locale';
 import { Trash2, Edit, Clock, Users, MapPin } from 'lucide-react';
-import { deleteTrip } from '@/app/actions';
+import { deleteTrip, deleteRoute } from '@/app/actions';
+import { useRouter } from 'next/navigation';
 import EditRouteModal from './EditRouteModal';
 import { TripWithDetails } from './CompanyClient';
 
@@ -27,6 +28,7 @@ interface RouteGroup {
 }
 
 export default function TripsTab({ trips, isPending }: TripsTabProps) {
+  const router = useRouter();
   const [deletePending, startDeleteTransition] = useTransition();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<RouteGroup | null>(null);
@@ -66,6 +68,19 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
         new Date(a.departure).getTime() - new Date(b.departure).getTime()
     );
   });
+
+  const handleDeleteRoute = (routeId: number, routeName: string) => {
+    if (!confirm(`Da li ste sigurni da želite da obrišete rutu "${routeName}"? Sva putovanja i rezervacije će biti trajno obrisane.`)) return;
+
+    startDeleteTransition(async () => {
+      try {
+        await deleteRoute(routeId);
+        router.refresh();
+      } catch (error) {
+        alert('Greška pri brisanju rute: ' + (error instanceof Error ? error.message : 'Nepoznata greška'));
+      }
+    });
+  };
 
   const handleDeleteTrip = (tripId: number) => {
     if (!confirm('Da li ste sigurni da želite da obrišete ovo putovanje?')) {
@@ -150,15 +165,25 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditRoute(route)}
-                  disabled={deletePending}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Uredi rutu
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditRoute(route)}
+                    disabled={deletePending}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Uredi rutu
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteRoute(route.routeId, `${route.fromCity} → ${route.toCity}`)}
+                    disabled={deletePending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
 

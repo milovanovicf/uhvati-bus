@@ -6,12 +6,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import { Company } from '@/generated/prisma';
 import TripsTab from './TripsTab';
-import RoutesTab from './RoutesTab';
 import ReservationsTab from './ReservationsTab';
 import SettingsTab from './SettingsTab';
 import CreateTripModal from './TripModal';
 
-type Tab = 'trips' | 'routes' | 'reservations' | 'settings';
+type Tab = 'trips' | 'reservations' | 'settings';
 
 export type TripReservation = {
   id: number;
@@ -50,13 +49,11 @@ export type RouteWithCities = {
 interface DashboardClientProps {
   company: Company;
   initialTrips: TripWithDetails[];
-  initialRoutes: RouteWithCities[];
 }
 
 export default function DashboardClient({
   company,
   initialTrips,
-  initialRoutes,
 }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>('trips');
   const [createOpen, setCreateOpen] = useState(false);
@@ -72,14 +69,6 @@ export default function DashboardClient({
     switch (activeTab) {
       case 'trips':
         return <TripsTab trips={initialTrips} isPending={isPending} />;
-      case 'routes':
-        return (
-          <RoutesTab
-            routes={initialRoutes}
-            trips={initialTrips}
-            isPending={isPending}
-          />
-        );
       case 'reservations':
         return <ReservationsTab trips={initialTrips} isPending={isPending} />;
       case 'settings':
@@ -107,7 +96,7 @@ export default function DashboardClient({
               </Button>
 
               <ul className="space-y-2">
-                {(['trips', 'routes', 'reservations', 'settings'] as Tab[]).map(
+                {(['trips', 'reservations', 'settings'] as Tab[]).map(
                   (tab) => (
                     <li key={tab}>
                       <button
@@ -118,7 +107,6 @@ export default function DashboardClient({
                         disabled={isPending}
                       >
                         {tab === 'trips' && 'Putovanja'}
-                        {tab === 'routes' && 'Rute'}
                         {tab === 'reservations' && 'Rezervacije'}
                         {tab === 'settings' && 'Podešavanja'}
                       </button>
