@@ -10,19 +10,19 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Reservation {
-  id        Int      @id @default(autoincrement())
-  companyId Int
-  fullName  String
-  email     String
-  seats     Json
-  trip      Trip     @relation(fields: [tripId], references: [id])
-  tripId    Int
-  createdAt DateTime @default(now())
-  company   Company  @relation(fields: [companyId], references: [id])
+  id         Int      @id @default(autoincrement())
+  bookingRef String?  @unique
+  companyId  Int
+  fullName   String
+  email      String
+  seats      Json
+  trip       Trip     @relation(fields: [tripId], references: [id])
+  tripId     Int
+  createdAt  DateTime @default(now())
+  company    Company  @relation(fields: [companyId], references: [id])
 }
 
 model Trip {
