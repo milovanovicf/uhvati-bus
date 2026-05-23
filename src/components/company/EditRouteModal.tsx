@@ -282,9 +282,6 @@ export default function EditRouteModal({
             <div className="text-green-600 text-lg font-medium mb-2">
               ✅ Promene uspešno sačuvane!
             </div>
-            <div className="text-xs text-gray-500 mt-2">
-              Modal će se zatvoriti automatski...
-            </div>
           </div>
         ) : (
           <>
@@ -352,49 +349,66 @@ export default function EditRouteModal({
                     return (
                       <div
                         key={slot.id}
-                        className={`flex items-center gap-4 p-4 border rounded-lg ${
+                        className={`p-4 border rounded-lg ${
                           hasOverlap ? 'bg-red-50 border-red-200' : 'bg-gray-50'
                         }`}
                       >
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <Clock
-                            className={`h-4 w-4 ${
-                              hasOverlap ? 'text-red-500' : 'text-gray-600'
-                            }`}
-                          />
-                          <span
-                            className={
-                              hasOverlap ? 'text-red-600' : 'text-gray-600'
-                            }
-                          >
-                            Polazak #{index + 1}
-                          </span>
-                          {hasOverlap && (
-                            <span className="text-xs text-red-500 font-normal">
-                              (Preklapanje!)
+                        {/* Header row: label + delete button */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <Clock
+                              className={`h-4 w-4 ${
+                                hasOverlap ? 'text-red-500' : 'text-gray-600'
+                              }`}
+                            />
+                            <span
+                              className={
+                                hasOverlap ? 'text-red-600' : 'text-gray-600'
+                              }
+                            >
+                              Polazak #{index + 1}
                             </span>
-                          )}
-                          {slot.tripId && (
-                            <span className="text-xs text-blue-500 font-normal">
-                              (Postojeći)
-                            </span>
+                            {hasOverlap && (
+                              <span className="text-xs text-red-500 font-normal">
+                                (Preklapanje!)
+                              </span>
+                            )}
+                            {slot.tripId && (
+                              <span className="text-xs text-blue-500 font-normal">
+                                (Postojeći)
+                              </span>
+                            )}
+                          </div>
+
+                          {timeSlots.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeTimeSlot(slot.id)}
+                              className="text-red-600 hover:text-red-700 h-7 w-7 p-0"
+                              disabled={isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
 
-                        <div className="flex-1 grid grid-cols-3 gap-4">
+                        {/* Inputs row: full width across the card */}
+                        <div className="grid grid-cols-3 gap-4">
                           <div>
                             <Label className="text-xs">Vreme polaska</Label>
                             <Input
                               type="time"
                               value={slot.departureTime}
-                              onChange={(e) => {
+                              onChange={(e) =>
                                 updateTimeSlot(
                                   slot.id,
                                   'departureTime',
                                   e.target.value,
-                                );
-                              }}
-                              className="text-sm"
+                                )
+                              }
+                              className="text-sm w-full"
                               disabled={isPending}
                             />
                           </div>
@@ -404,14 +418,14 @@ export default function EditRouteModal({
                             <Input
                               type="time"
                               value={slot.arrivalTime}
-                              onChange={(e) => {
+                              onChange={(e) =>
                                 updateTimeSlot(
                                   slot.id,
                                   'arrivalTime',
                                   e.target.value,
-                                );
-                              }}
-                              className="text-sm"
+                                )
+                              }
+                              className="text-sm w-full"
                               disabled={isPending}
                             />
                           </div>
@@ -424,19 +438,6 @@ export default function EditRouteModal({
                             </div>
                           </div>
                         </div>
-
-                        {timeSlots.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeTimeSlot(slot.id)}
-                            className="text-red-600 hover:text-red-700"
-                            disabled={isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     );
                   })}

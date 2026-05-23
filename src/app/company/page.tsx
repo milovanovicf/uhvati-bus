@@ -1,14 +1,9 @@
 import React from 'react';
-import { LogoutLink } from '@kinde-oss/kinde-auth-nextjs/server';
-import {
-  getCompanyTrips,
-  getCurrentCompany,
-  getCompanyRoutes,
-} from '../actions';
+import Link from 'next/link';
+import { getCompanyTrips, getCurrentCompany, getCompanyRoutes } from '../actions';
 import CompanyClient from '@/components/company/CompanyClient';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
+import { LogIn, AlertCircle } from 'lucide-react';
 
 export default async function CompanyDashboard() {
   try {
@@ -16,22 +11,11 @@ export default async function CompanyDashboard() {
     const trips = await getCompanyTrips();
     const routes = await getCompanyRoutes();
 
-    async function handleLogout() {
-      try {
-        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-        window.location.href = '/';
-      } catch {
-        window.location.href = '/';
-      }
-    }
-
     return (
       <div className="min-h-screen p-6 bg-slate-50">
         <header className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Dobrodošli {company?.name}</h2>
-          <div className="flex items-center gap-3">
-            <LogoutButton />
-          </div>
+          <h2 className="text-2xl font-bold">Dobrodošli, {company?.name}</h2>
+          <LogoutButton />
         </header>
 
         <CompanyClient
@@ -42,16 +26,47 @@ export default async function CompanyDashboard() {
       </div>
     );
   } catch (error) {
+    const isUnauthorized =
+      error instanceof Error && error.message === 'Unauthorized';
+
     return (
-      <div className="min-h-screen p-6 bg-slate-50">
-        <div className="text-center">
-          <p className="text-red-500 text-lg">
-            Error loading dashboard:{' '}
-            {error instanceof Error ? error.message : 'Unknown error'}
-          </p>
-          <LogoutLink className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block">
-            Sign In Again
-          </LogoutLink>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border p-10 max-w-md w-full text-center">
+          <div className="flex justify-center mb-4">
+            <div className="bg-red-100 rounded-full p-3">
+              <AlertCircle className="h-8 w-8 text-red-500" />
+            </div>
+          </div>
+
+          {isUnauthorized ? (
+            <>
+              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+                Niste prijavljeni
+              </h1>
+              <p className="text-gray-500 mb-6">
+                Ova stranica je dostupna samo prijavljenim kompanijama. Molimo
+                prijavite se da biste nastavili.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+                Greška pri učitavanju
+              </h1>
+              <p className="text-gray-500 mb-6">
+                Došlo je do neočekivane greške. Pokušajte ponovo ili se
+                prijavite iznova.
+              </p>
+            </>
+          )}
+
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <LogIn className="h-4 w-4" />
+            Prijavite se
+          </Link>
         </div>
       </div>
     );
