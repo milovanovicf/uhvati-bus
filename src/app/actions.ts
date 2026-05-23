@@ -294,7 +294,7 @@ export async function deleteTrip(tripId: number) {
     where: { id: tripId },
   });
 
-  revalidatePath('/dashboard');
+  revalidatePath('/company');
 }
 
 export async function deleteRoute(routeId: number) {
@@ -349,7 +349,7 @@ export async function updateTrip(tripId: number, formData: FormData) {
     },
   });
 
-  revalidatePath('/dashboard');
+  revalidatePath('/company');
   return trip;
 }
 

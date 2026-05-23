@@ -69,13 +69,14 @@ export default function Header() {
               </ul>
             </NavigationMenuContent>
           </NavigationMenuItem>
-          <AuthModal
-            open={authOpen}
-            onClose={() => setAuthOpen(false)}
-            mode={authMode}
-          />
         </NavigationMenuList>
       </NavigationMenu>
+
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        mode={authMode}
+      />
 
       {/* Hamburger Icon */}
       <button
@@ -111,12 +112,18 @@ export default function Header() {
             <Button
               variant="outline"
               className="w-full bg-chart-4 text-white text-md"
+              onClick={() => { setIsOpen(false); openAuthModal('login'); }}
             >
               Uloguj se
             </Button>
           </li>
           <li>
-            <Button className="w-full text-md">Prijavi se</Button>
+            <Button
+              className="w-full text-md"
+              onClick={() => { setIsOpen(false); openAuthModal('register'); }}
+            >
+              Prijavi se
+            </Button>
           </li>
         </ul>
       </div>
