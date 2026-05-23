@@ -6,6 +6,8 @@ import { Reservation } from '@/generated/prisma';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { sendBookingConfirmation } from '@/lib/email';
 
 type ReservationState = {
   success: boolean;
@@ -13,6 +15,16 @@ type ReservationState = {
   fieldErrors?: { [key: string]: string };
   reservation?: Reservation;
 };
+
+function generateBookingRef(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.randomBytes(6);
+  let ref = 'BUS-';
+  for (const byte of bytes) {
+    ref += chars[byte % chars.length];
+  }
+  return ref;
+}
 
 export async function handleReservationCreate(
   _prevState: ReservationState,
@@ -37,7 +49,12 @@ export async function handleReservationCreate(
       },
       include: {
         reservations: true,
-        route: true,
+        route: {
+          include: {
+            from: true,
+            to: true,
+          },
+        },
       },
     });
 
@@ -86,14 +103,29 @@ export async function handleReservationCreate(
       };
     }
 
+    const bookingRef = generateBookingRef();
+
     const reservation = await prisma.reservation.create({
       data: {
+        bookingRef,
         fullName,
         companyId: company.id,
         email,
         seats: assignedSeats,
         tripId: trip.id,
       },
+    });
+
+    await sendBookingConfirmation({
+      to: email,
+      fullName,
+      bookingRef,
+      fromCity: trip.route.from.name,
+      toCity: trip.route.to.name,
+      departure: trip.departure,
+      arrival: trip.arrival,
+      companyName: company.name,
+      seats: assignedSeats,
     });
 
     return {
