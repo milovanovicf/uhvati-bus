@@ -24,9 +24,8 @@ export default function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
     if (!res.ok) {
       alert(data.error || 'Registration failed');
     } else {
-      alert('Uspešna registracija');
       onSuccess();
-      router.push('/company');
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     }
   };
 

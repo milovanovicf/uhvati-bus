@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { getCompanyTrips, getCurrentCompany } from '../actions';
 import CompanyClient from '@/components/company/CompanyClient';
 import LogoutButton from '@/components/LogoutButton';
@@ -8,6 +9,11 @@ import { LogIn, AlertCircle } from 'lucide-react';
 export default async function CompanyDashboard() {
   try {
     const company = await getCurrentCompany();
+
+    if (!company.emailVerified) {
+      redirect(`/verify-email?email=${encodeURIComponent(company.email)}`);
+    }
+
     const trips = await getCompanyTrips();
 
     return (

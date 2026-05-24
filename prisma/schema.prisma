@@ -66,10 +66,13 @@ model City {
 }
 
 model Company {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  password           String
+  emailVerified      Boolean   @default(false)
+  verificationCode   String?
+  verificationExpiry DateTime?
 
   trips       Trip[]
   routes      Route[]
