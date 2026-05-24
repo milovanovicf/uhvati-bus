@@ -132,6 +132,65 @@ function buildHtml(data: BookingEmailData): string {
 </html>`;
 }
 
+export async function sendVerificationCode(
+  to: string,
+  companyName: string,
+  code: string,
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not set — skipping verification email');
+    return;
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="sr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background:#1d4ed8;padding:28px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">UhvatiBus</h1>
+              <p style="margin:4px 0 0;color:#93c5fd;font-size:14px;">Verifikacija naloga</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0;font-size:16px;color:#111827;">Poštovani/a <strong>${companyName}</strong>,</p>
+              <p style="margin:12px 0 0;font-size:15px;color:#374151;">Unesite sledeći kod da biste verifikovali svoju email adresu. Kod važi <strong>15 minuta</strong>.</p>
+              <div style="margin:28px 0;text-align:center;">
+                <span style="display:inline-block;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px 32px;font-size:36px;font-weight:700;color:#1e3a8a;letter-spacing:0.15em;">${code}</span>
+              </div>
+              <p style="margin:0;font-size:13px;color:#6b7280;">Ako niste vi kreirali nalog na UhvatiBus platformi, možete ignorisati ovaj email.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f9fafb;padding:16px 32px;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;font-size:13px;color:#6b7280;text-align:center;">UhvatiBus — platforma za rezervaciju autobuskih karata u Srbiji</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: 'UhvatiBus <onboarding@resend.dev>',
+      to,
+      subject: 'UhvatiBus — verifikacija email adrese',
+      html,
+    });
+    if (error) console.error('Resend error:', error);
+  } catch (err) {
+    console.error('Failed to send verification email:', err);
+  }
+}
+
 export async function sendBookingConfirmation(
   data: BookingEmailData,
 ): Promise<void> {

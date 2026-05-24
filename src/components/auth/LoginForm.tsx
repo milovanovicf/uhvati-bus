@@ -23,6 +23,10 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 
     if (!res.ok) {
       const data = await res.json();
+      if (data.error === 'EMAIL_NOT_VERIFIED') {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
       setError(data.error || 'Login failed');
       return;
     }

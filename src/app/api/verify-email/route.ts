@@ -1,24 +1,37 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/app/utils/db';
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
+  const { email, code } = await req.json();
 
   const company = await prisma.company.findUnique({ where: { email } });
 
-  if (!company || !(await bcrypt.compare(password, company.password))) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  if (!company) {
+    return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
   }
 
-  if (!company.emailVerified) {
-    return NextResponse.json(
-      { error: 'EMAIL_NOT_VERIFIED' },
-      { status: 403 }
-    );
+  if (company.emailVerified) {
+    return NextResponse.json({ error: 'Already verified' }, { status: 400 });
   }
+
+  if (
+    company.verificationCode !== code ||
+    !company.verificationExpiry ||
+    company.verificationExpiry < new Date()
+  ) {
+    return NextResponse.json({ error: 'Invalid or expired code' }, { status: 400 });
+  }
+
+  await prisma.company.update({
+    where: { id: company.id },
+    data: {
+      emailVerified: true,
+      verificationCode: null,
+      verificationExpiry: null,
+    },
+  });
 
   const token = jwt.sign({ id: company.id }, process.env.JWT_SECRET!, {
     expiresIn: '1d',

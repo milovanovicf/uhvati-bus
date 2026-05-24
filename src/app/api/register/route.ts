@@ -1,8 +1,11 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { prisma } from '@/app/utils/db';
+import { sendVerificationCode } from '@/lib/email';
+
+function generateCode(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
 export async function POST(req: NextRequest) {
   const { name, email, password } = await req.json();
@@ -16,31 +19,20 @@ export async function POST(req: NextRequest) {
   }
 
   const hashed = await bcrypt.hash(password, 10);
+  const code = generateCode();
+  const verificationExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
-  const company = await prisma.company.create({
-    data: { name, email, password: hashed },
-  });
-
-  // Create JWT token after successful registration
-  const token = jwt.sign({ id: company.id }, process.env.JWT_SECRET!, {
-    expiresIn: '1d',
-  });
-
-  const cookieStore = await cookies();
-  cookieStore.set('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24, // 1 day
-    path: '/',
-  });
-
-  return NextResponse.json({
-    success: true,
-    message: 'Registered successfully',
-    company: {
-      id: company.id,
-      name: company.name,
-      email: company.email,
+  await prisma.company.create({
+    data: {
+      name,
+      email,
+      password: hashed,
+      verificationCode: code,
+      verificationExpiry,
     },
   });
+
+  await sendVerificationCode(email, name, code);
+
+  return NextResponse.json({ success: true }, { status: 201 });
 }
