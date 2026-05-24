@@ -31,14 +31,20 @@ function VerifyEmailContent() {
     }
   }
 
-  function handleKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) {
     if (e.key === 'Backspace' && !digits[index] && index > 0) {
       inputs.current[index - 1]?.focus();
     }
   }
 
   function handlePaste(e: React.ClipboardEvent) {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    const pasted = e.clipboardData
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, 6);
     if (pasted.length === 6) {
       setDigits(pasted.split(''));
       inputs.current[5]?.focus();
@@ -62,9 +68,11 @@ function VerifyEmailContent() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error === 'Invalid or expired code'
-          ? 'Kod je neispravan ili je istekao. Zatražite novi kod.'
-          : 'Greška pri verifikaciji. Pokušajte ponovo.');
+        setError(
+          data.error === 'Invalid or expired code'
+            ? 'Kod je neispravan ili je istekao. Zatražite novi kod.'
+            : 'Greška pri verifikaciji. Pokušajte ponovo.',
+        );
       } else {
         router.push('/company');
       }
@@ -106,7 +114,9 @@ function VerifyEmailContent() {
             {digits.map((d, i) => (
               <Input
                 key={i}
-                ref={(el) => { inputs.current[i] = el; }}
+                ref={(el) => {
+                  inputs.current[i] = el;
+                }}
                 value={d}
                 onChange={(e) => handleDigitChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
@@ -118,7 +128,9 @@ function VerifyEmailContent() {
           </div>
 
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          {resent && <p className="text-green-600 text-sm mb-4">Nov kod je poslat.</p>}
+          {resent && (
+            <p className="text-green-600 text-sm mb-4">Nov kod je poslat.</p>
+          )}
 
           <Button type="submit" disabled={loading} className="w-full mb-4">
             {loading ? 'Verifikacija...' : 'Potvrdi'}

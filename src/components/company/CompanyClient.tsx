@@ -6,11 +6,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import { Company } from '@/generated/prisma';
 import TripsTab from './TripsTab';
-import ReservationsTab from './ReservationsTab';
 import SettingsTab from './SettingsTab';
-import CreateTripModal from './TripModal';
+import TripModal from './RecurringTripModal';
 
-type Tab = 'trips' | 'reservations' | 'settings';
+type Tab = 'trips' | 'settings';
 
 export type TripReservation = {
   id: number;
@@ -56,21 +55,17 @@ export default function DashboardClient({
   initialTrips,
 }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>('trips');
-  const [createOpen, setCreateOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleTabChange = (tab: Tab) => {
-    startTransition(() => {
-      setActiveTab(tab);
-    });
+    startTransition(() => setActiveTab(tab));
   };
 
   function renderTab() {
     switch (activeTab) {
       case 'trips':
         return <TripsTab trips={initialTrips} isPending={isPending} />;
-      case 'reservations':
-        return <ReservationsTab trips={initialTrips} isPending={isPending} />;
       case 'settings':
         return <SettingsTab company={company} isPending={isPending} />;
       default:
@@ -88,31 +83,28 @@ export default function DashboardClient({
             </CardHeader>
             <CardContent>
               <Button
-                onClick={() => setCreateOpen(true)}
+                onClick={() => setModalOpen(true)}
                 className="cursor-pointer mb-4 w-full"
                 disabled={isPending}
               >
-                <Plus className="mr-2 h-4 w-4" /> Novo Putovanje
+                <Plus className="mr-2 h-4 w-4" /> Dodaj putovanje
               </Button>
 
               <ul className="space-y-2">
-                {(['trips', 'reservations', 'settings'] as Tab[]).map(
-                  (tab) => (
-                    <li key={tab}>
-                      <button
-                        className={`text-sm cursor-pointer w-full text-left p-2 rounded hover:bg-gray-100 ${
-                          activeTab === tab ? 'font-bold bg-gray-100' : ''
-                        }`}
-                        onClick={() => handleTabChange(tab)}
-                        disabled={isPending}
-                      >
-                        {tab === 'trips' && 'Putovanja'}
-                        {tab === 'reservations' && 'Rezervacije'}
-                        {tab === 'settings' && 'Podešavanja'}
-                      </button>
-                    </li>
-                  ),
-                )}
+                {(['trips', 'settings'] as Tab[]).map((tab) => (
+                  <li key={tab}>
+                    <button
+                      className={`text-sm cursor-pointer w-full text-left p-2 rounded hover:bg-gray-100 ${
+                        activeTab === tab ? 'font-bold bg-gray-100' : ''
+                      }`}
+                      onClick={() => handleTabChange(tab)}
+                      disabled={isPending}
+                    >
+                      {tab === 'trips' && 'Putovanja'}
+                      {tab === 'settings' && 'Podešavanja'}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -123,7 +115,7 @@ export default function DashboardClient({
             <CardContent className="p-6">
               {isPending ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
                   <span className="ml-2">Učitavanje...</span>
                 </div>
               ) : (
@@ -134,10 +126,7 @@ export default function DashboardClient({
         </section>
       </main>
 
-      <CreateTripModal
-        isOpen={createOpen}
-        onClose={() => setCreateOpen(false)}
-      />
+      <TripModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   );
 }

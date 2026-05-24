@@ -4,7 +4,11 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { srLatn } from 'date-fns/locale';
-import { ArrowLeftRight, Calendar as CalendarIcon, HelpCircle } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  Calendar as CalendarIcon,
+  HelpCircle,
+} from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -32,6 +36,7 @@ export default function BookingForm() {
   const [email, setEmail] = useState('');
   const [seats, setSeats] = useState(1);
   const [time, setTime] = useState('10:30');
+  const [filterByTime, setFilterByTime] = useState(false);
 
   const formattedDate = date
     ? DateTime.fromJSDate(date).setLocale('sr-Latn').toFormat('d. LLL yyyy')
@@ -39,7 +44,7 @@ export default function BookingForm() {
 
   const handleSearch = () => {
     if (!fromCity || !toCity || !date) {
-      alert('Molimo popunite sva polja pre pretrage ruta.');
+      alert('Izaberite polazni grad, odredišni grad i datum.');
       return;
     }
 
@@ -47,8 +52,8 @@ export default function BookingForm() {
       fromId: fromCity.id.toString(),
       toId: toCity.id.toString(),
       date: DateTime.fromJSDate(date).toISODate() || '',
-      time,
     });
+    if (filterByTime && time) params.set('time', time);
 
     if (fullName) params.set('fullName', fullName);
     if (email) params.set('email', email);
@@ -65,28 +70,6 @@ export default function BookingForm() {
 
       <CardContent className="px-5">
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Ime i Prezime
-            </label>
-            <Input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full border p-2 rounded"
-              placeholder="Ime i Prezime"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border p-2 rounded"
-              placeholder="Email"
-            />
-          </div>
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex flex-col gap-2">
               <Label htmlFor="date-picker" className="px-1">
@@ -119,15 +102,25 @@ export default function BookingForm() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="time-picker" className="px-1">
-                Vreme
-              </Label>
+              <div className="flex items-center gap-2 px-1">
+                <Label htmlFor="time-picker">Vreme</Label>
+                <label className="flex items-center gap-1 text-xs text-gray-400 font-normal cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filterByTime}
+                    onChange={(e) => setFilterByTime(e.target.checked)}
+                    className="accent-chart-4"
+                  />
+                  filtriraj
+                </label>
+              </div>
               <Input
                 type="time"
                 id="time-picker"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none border p-2 rounded"
+                disabled={!filterByTime}
+                className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none border p-2 rounded disabled:opacity-40 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -172,7 +165,33 @@ export default function BookingForm() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Broj sedišta
+              Ime i Prezime{' '}
+              <span className="text-gray-400 font-normal">(opciono)</span>
+            </label>
+            <Input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full border p-2 rounded"
+              placeholder="Ime i Prezime"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Email <span className="text-gray-400 font-normal">(opciono)</span>
+            </label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border p-2 rounded"
+              placeholder="Email"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Broj sedišta{' '}
+              <span className="text-gray-400 font-normal">(opciono)</span>
             </label>
             <Input
               type="number"

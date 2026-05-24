@@ -197,7 +197,6 @@ export async function getCurrentCompany() {
           reservations: true,
         },
         orderBy: { departure: 'desc' },
-        take: 50,
       },
     },
   });
@@ -227,7 +226,6 @@ export async function getCompanyTrips() {
       },
     },
     orderBy: { departure: 'desc' },
-    take: 50,
   });
 
   return trips.map((trip) => {
@@ -306,6 +304,34 @@ export async function createTrip(formData: FormData) {
 
   revalidatePath('/company');
   return trip;
+}
+
+export async function updateTripTimes(
+  tripId: number,
+  departure: string,
+  arrival: string,
+) {
+  const company = await getCurrentCompany();
+  const trip = await prisma.trip.findFirst({
+    where: { id: tripId, companyId: company.id },
+  });
+  if (!trip) throw new Error('Trip not found or unauthorized');
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { departure: new Date(departure), arrival: new Date(arrival) },
+  });
+  revalidatePath('/company');
+}
+
+export async function updateRouteSeats(routeId: number, seatsTotal: number) {
+  const company = await getCurrentCompany();
+  const route = await prisma.route.findFirst({ where: { id: routeId, companyId: company.id } });
+  if (!route) throw new Error('Ruta nije pronađena.');
+  await prisma.trip.updateMany({
+    where: { routeId, companyId: company.id },
+    data: { seatsTotal },
+  });
+  revalidatePath('/company');
 }
 
 export async function deleteTrip(tripId: number) {
@@ -539,6 +565,155 @@ export async function createMultipleTrips(tripsData: TripData[]) {
 
   revalidatePath('/company');
   return createdTrips;
+}
+
+interface RecurringTripInput {
+  fromId: number;
+  toId: number;
+  startDate: string; // 'YYYY-MM-DD'
+  endDate: string;   // 'YYYY-MM-DD'
+  daysOfWeek: number[]; // 0=Sun, 1=Mon … 6=Sat
+  timeSlots: Array<{ departureTime: string; arrivalTime: string }>;
+  seatsTotal: number;
+  duration?: number; // minutes
+  distance?: number; // km
+}
+
+export async function getRouteInfo(fromId: number, toId: number) {
+  const company = await getCurrentCompany();
+  return prisma.route.findUnique({
+    where: { fromId_toId_companyId: { companyId: company.id, fromId, toId } },
+    select: { duration: true, distance: true },
+  });
+}
+
+export async function updateRouteMetadata(
+  routeId: number,
+  duration: number | null,
+  distance: number | null,
+) {
+  const company = await getCurrentCompany();
+  const route = await prisma.route.findFirst({ where: { id: routeId, companyId: company.id } });
+  if (!route) throw new Error('Ruta nije pronađena.');
+  await prisma.route.update({
+    where: { id: routeId },
+    data: {
+      ...(duration != null && { duration }),
+      ...(distance != null && { distance }),
+    },
+  });
+  revalidatePath('/company');
+}
+
+export async function generateRecurringTrips(input: RecurringTripInput) {
+  const company = await getCurrentCompany();
+
+  if (input.daysOfWeek.length === 0 || input.timeSlots.length === 0) {
+    throw new Error('Izaberite bar jedan dan i jedno vreme polaska.');
+  }
+
+  let route = await prisma.route.findUnique({
+    where: {
+      fromId_toId_companyId: {
+        companyId: company.id,
+        fromId: input.fromId,
+        toId: input.toId,
+      },
+    },
+  });
+
+  if (!route) {
+    route = await prisma.route.create({
+      data: {
+        companyId: company.id,
+        fromId: input.fromId,
+        toId: input.toId,
+        ...(input.duration != null && { duration: input.duration }),
+        ...(input.distance != null && { distance: input.distance }),
+      },
+    });
+  } else if (input.duration != null || input.distance != null) {
+    route = await prisma.route.update({
+      where: { id: route.id },
+      data: {
+        ...(input.duration != null && { duration: input.duration }),
+        ...(input.distance != null && { distance: input.distance }),
+      },
+    });
+  }
+
+  const existing = await prisma.trip.findMany({
+    where: { routeId: route.id, companyId: company.id },
+    select: { departure: true },
+  });
+  const existingTimes = new Set(existing.map((t) => t.departure.getTime()));
+
+  const { DateTime } = await import('luxon');
+  const [sy, sm, sd] = input.startDate.split('-').map(Number);
+  const [ey, em, ed] = input.endDate.split('-').map(Number);
+
+  let current = DateTime.fromObject(
+    { year: sy, month: sm, day: sd },
+    { zone: 'Europe/Belgrade' }
+  );
+  const end = DateTime.fromObject(
+    { year: ey, month: em, day: ed },
+    { zone: 'Europe/Belgrade' }
+  );
+
+  if (end.diff(current, 'days').days > 730) {
+    throw new Error('Period ne može biti duži od 2 godine.');
+  }
+
+  const tripsData: Array<{
+    routeId: number;
+    companyId: number;
+    departure: Date;
+    arrival: Date;
+    seatsTotal: number;
+  }> = [];
+
+  while (current <= end) {
+    const jsDay = current.weekday % 7; // Luxon Mon=1..Sun=7 → JS Mon=1..Sun=0
+
+    if (input.daysOfWeek.includes(jsDay)) {
+      for (const slot of input.timeSlots) {
+        const [depH, depM] = slot.departureTime.split(':').map(Number);
+        const [arrH, arrM] = slot.arrivalTime.split(':').map(Number);
+
+        const departure = current
+          .set({ hour: depH, minute: depM, second: 0, millisecond: 0 })
+          .toUTC()
+          .toJSDate();
+
+        const isNextDay = arrH < depH || (arrH === depH && arrM < depM);
+        const arrivalDay = isNextDay ? current.plus({ days: 1 }) : current;
+        const arrival = arrivalDay
+          .set({ hour: arrH, minute: arrM, second: 0, millisecond: 0 })
+          .toUTC()
+          .toJSDate();
+
+        if (!existingTimes.has(departure.getTime())) {
+          tripsData.push({
+            routeId: route.id,
+            companyId: company.id,
+            departure,
+            arrival,
+            seatsTotal: input.seatsTotal,
+          });
+        }
+      }
+    }
+
+    current = current.plus({ days: 1 });
+  }
+
+  if (tripsData.length > 0) {
+    await prisma.trip.createMany({ data: tripsData, skipDuplicates: true });
+  }
+
+  revalidatePath('/company');
+  return { created: tripsData.length };
 }
 
 export async function updateCompanySettings(formData: FormData) {

@@ -1,118 +1,177 @@
-// components/dashboard/TripsTab.tsx
 'use client';
 
-import React, { useTransition, useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format } from 'date-fns';
+import { ChevronLeft, ChevronRight, Trash2, MapPin, Pencil } from 'lucide-react';
+import { format, addDays, startOfWeek, isSameDay, isToday } from 'date-fns';
 import { srLatn } from 'date-fns/locale';
-import { Trash2, Edit, Clock, Users, MapPin } from 'lucide-react';
-import { deleteTrip, deleteRoute } from '@/app/actions';
+import { deleteRoute } from '@/app/actions';
 import { useRouter } from 'next/navigation';
-import EditRouteModal from './EditRouteModal';
 import { TripWithDetails } from './CompanyClient';
+import EditRouteModal, { RouteGroup } from './EditRouteModal';
+import TripReservationsModal from './TripReservationsModal';
+
+const PX_PER_HOUR = 64;
+
+const PALETTE = [
+  { bar: '#3b82f6', bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe' },
+  { bar: '#10b981', bg: '#ecfdf5', text: '#065f46', border: '#a7f3d0' },
+  { bar: '#8b5cf6', bg: '#f5f3ff', text: '#5b21b6', border: '#ddd6fe' },
+  { bar: '#f97316', bg: '#fff7ed', text: '#9a3412', border: '#fed7aa' },
+  { bar: '#ec4899', bg: '#fdf2f8', text: '#9d174d', border: '#fbcfe8' },
+  { bar: '#14b8a6', bg: '#f0fdfa', text: '#134e4a', border: '#99f6e4' },
+];
+
+interface RouteInfo {
+  routeId: number;
+  fromCity: string;
+  toCity: string;
+  trips: TripWithDetails[];
+  colorIdx: number;
+}
 
 interface TripsTabProps {
   trips: TripWithDetails[];
   isPending: boolean;
 }
 
-interface RouteGroup {
-  routeId: number;
-  fromCity: string;
-  toCity: string;
-  trips: TripWithDetails[];
-  totalSeats: number;
-  availableSeats: number;
-  totalReservations: number;
-}
-
 export default function TripsTab({ trips, isPending }: TripsTabProps) {
   const router = useRouter();
-  const [deletePending, startDeleteTransition] = useTransition();
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState<RouteGroup | null>(null);
-
-  // Group trips by route
-  const groupedRoutes: RouteGroup[] = trips.reduce(
-    (groups: RouteGroup[], trip) => {
-      const routeId = trip.routeId;
-      const existingGroup = groups.find((g) => g.routeId === routeId);
-
-      if (existingGroup) {
-        existingGroup.trips.push(trip);
-        existingGroup.totalSeats += trip.seatsTotal;
-        existingGroup.availableSeats += trip.seatsAvailable || 0;
-        existingGroup.totalReservations += trip.reservations?.length || 0;
-      } else {
-        groups.push({
-          routeId,
-          fromCity: trip.route?.from?.name || 'Unknown',
-          toCity: trip.route?.to?.name || 'Unknown',
-          trips: [trip],
-          totalSeats: trip.seatsTotal,
-          availableSeats: trip.seatsAvailable || 0,
-          totalReservations: trip.reservations?.length || 0,
-        });
-      }
-
-      return groups;
-    },
-    []
+  const [weekStart, setWeekStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 })
   );
+  const [editingRoute, setEditingRoute] = useState<RouteGroup | null>(null);
+  const [selectedTrip, setSelectedTrip] = useState<TripWithDetails | null>(null);
+  const [deletePending, startDeleteTransition] = useTransition();
 
-  // Sort trips within each group by departure time
-  groupedRoutes.forEach((group) => {
-    group.trips.sort(
-      (a, b) =>
-        new Date(a.departure).getTime() - new Date(b.departure).getTime()
-    );
-  });
+  // Sync selectedTrip with latest data after router.refresh()
+  React.useEffect(() => {
+    if (!selectedTrip) return;
+    const updated = trips.find((t) => t.id === selectedTrip.id);
+    setSelectedTrip(updated ?? null);
+  }, [trips]);
 
-  const handleDeleteRoute = (routeId: number, routeName: string) => {
-    if (!confirm(`Da li ste sigurni da želite da obrišete rutu "${routeName}"? Sva putovanja i rezervacije će biti trajno obrisane.`)) return;
-
-    startDeleteTransition(async () => {
-      try {
-        await deleteRoute(routeId);
-        router.refresh();
-      } catch (error) {
-        alert('Greška pri brisanju rute: ' + (error instanceof Error ? error.message : 'Nepoznata greška'));
-      }
-    });
-  };
-
-  const handleDeleteTrip = (tripId: number) => {
-    if (!confirm('Da li ste sigurni da želite da obrišete ovo putovanje?')) {
-      return;
+  // Build route map once per render
+  const routeMap = new Map<number, RouteInfo>();
+  for (const trip of trips) {
+    if (!routeMap.has(trip.routeId)) {
+      routeMap.set(trip.routeId, {
+        routeId: trip.routeId,
+        fromCity: trip.route?.from?.name ?? '?',
+        toCity: trip.route?.to?.name ?? '?',
+        trips: [],
+        colorIdx: routeMap.size % PALETTE.length,
+      });
     }
+    routeMap.get(trip.routeId)!.trips.push(trip);
+  }
+  const routes = Array.from(routeMap.values());
 
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  // Dynamic hour range based on trips visible this week
+  const weekTrips = trips.filter((t) => {
+    const d = new Date(t.departure);
+    return d >= weekStart && d < addDays(weekStart, 7);
+  });
+  const hourStart = weekTrips.length
+    ? Math.max(0, Math.min(...weekTrips.map((t) => new Date(t.departure).getHours())) - 1)
+    : 6;
+  const hourEnd = weekTrips.length
+    ? Math.min(25, Math.max(...weekTrips.map((t) => new Date(t.arrival).getHours())) + 1)
+    : 22;
+  const hours = Array.from({ length: hourEnd - hourStart }, (_, i) => hourStart + i);
+  const totalHeight = hours.length * PX_PER_HOUR;
+
+  function getTop(trip: TripWithDetails) {
+    const d = new Date(trip.departure);
+    return (d.getHours() + d.getMinutes() / 60 - hourStart) * PX_PER_HOUR;
+  }
+
+  function getHeight(trip: TripWithDetails) {
+    const dep = new Date(trip.departure);
+    const arr = new Date(trip.arrival);
+    let depH = dep.getHours() + dep.getMinutes() / 60;
+    let arrH = arr.getHours() + arr.getMinutes() / 60;
+    if (arrH <= depH) arrH += 24;
+    return Math.max((arrH - depH) * PX_PER_HOUR, 28);
+  }
+
+  function tripsForDay(day: Date) {
+    return routes.flatMap((r) =>
+      r.trips
+        .filter((t) => isSameDay(new Date(t.departure), day))
+        .map((t) => ({ trip: t, color: PALETTE[r.colorIdx], route: r }))
+    );
+  }
+
+  type DayItem = ReturnType<typeof tripsForDay>[number];
+
+  function layoutDayTrips(items: DayItem[]) {
+    if (items.length === 0) return [];
+    const sorted = [...items].sort(
+      (a, b) => new Date(a.trip.departure).getTime() - new Date(b.trip.departure).getTime()
+    );
+
+    // Group into clusters of overlapping trips
+    const clusters: DayItem[][] = [];
+    let clusterEnd = 0;
+    let current: DayItem[] = [];
+    for (const item of sorted) {
+      const dep = new Date(item.trip.departure).getTime();
+      const arr = new Date(item.trip.arrival).getTime();
+      if (dep >= clusterEnd && current.length > 0) {
+        clusters.push(current);
+        current = [];
+        clusterEnd = 0;
+      }
+      current.push(item);
+      clusterEnd = Math.max(clusterEnd, arr);
+    }
+    if (current.length > 0) clusters.push(current);
+
+    // Within each cluster assign sub-columns greedily
+    const result: Array<DayItem & { col: number; numCols: number }> = [];
+    for (const cluster of clusters) {
+      const colEnd: number[] = [];
+      const cols: number[] = [];
+      for (const item of cluster) {
+        const dep = new Date(item.trip.departure).getTime();
+        const arr = new Date(item.trip.arrival).getTime();
+        let col = colEnd.findIndex((e) => e <= dep);
+        if (col === -1) col = colEnd.length;
+        colEnd[col] = arr;
+        cols.push(col);
+      }
+      const numCols = colEnd.length;
+      cluster.forEach((item, i) => result.push({ ...item, col: cols[i], numCols }));
+    }
+    return result;
+  }
+
+  function handleDeleteRoute(route: RouteInfo) {
+    if (
+      !confirm(
+        `Da li ste sigurni da želite da obrišete rutu "${route.fromCity} → ${route.toCity}"?\nSva putovanja i rezervacije će biti trajno obrisana.`
+      )
+    )
+      return;
     startDeleteTransition(async () => {
       try {
-        await deleteTrip(tripId);
-      } catch (error) {
+        await deleteRoute(route.routeId);
+        router.refresh();
+      } catch (err) {
         alert(
-          'Greška pri brisanju putovanja: ' +
-            (error instanceof Error ? error.message : 'Unknown error')
+          'Greška: ' + (err instanceof Error ? err.message : 'Nepoznata greška')
         );
       }
     });
-  };
-
-  const handleEditRoute = (route: RouteGroup) => {
-    setSelectedRoute(route);
-    setEditModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setEditModalOpen(false);
-    setSelectedRoute(null);
-  };
+  }
 
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
         <span className="ml-2">Učitavanje putovanja...</span>
       </div>
     );
@@ -121,147 +180,242 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
   if (trips.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500 mb-4">Nemate kreirana putovanja</p>
+        <p className="text-gray-500 mb-2">Nemate kreirana putovanja</p>
         <p className="text-sm text-gray-400">
-          Kliknite na "Novo Putovanje" da kreirate prvo putovanje
+          Kliknite na "Novo putovanje" ili "Serija putovanja" da počnete.
         </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-4">
-        Rute ({groupedRoutes.length}) - Ukupno putovanja ({trips.length})
-      </h3>
-
-      <div className="space-y-6">
-        {groupedRoutes.map((route) => (
-          <Card
-            key={route.routeId}
-            className="hover:shadow-md transition-shadow"
-          >
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-gray-500" />
-                    {route.fromCity} → {route.toCity}
-                  </CardTitle>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {route.trips.length} polazaka
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {route.availableSeats} / {route.totalSeats} slobodno
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium">
-                        {route.totalReservations}
-                      </span>{' '}
-                      rezervacija
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditRoute(route)}
-                    disabled={deletePending}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Uredi rutu
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteRoute(route.routeId, `${route.fromCity} → ${route.toCity}`)}
-                    disabled={deletePending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+    <div className="space-y-4">
+      {/* Route legend */}
+      <div className="space-y-1.5">
+        {routes.map((route) => {
+          const c = PALETTE[route.colorIdx];
+          return (
+            <div
+              key={route.routeId}
+              className="flex items-center justify-between rounded-lg px-3 py-2 border text-sm"
+              style={{ backgroundColor: c.bg, borderColor: c.border }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full flex-none"
+                  style={{ backgroundColor: c.bar }}
+                />
+                <MapPin className="h-3.5 w-3.5 flex-none" style={{ color: c.bar }} />
+                <span className="font-medium" style={{ color: c.text }}>
+                  {route.fromCity} → {route.toCity}
+                </span>
+                <span className="text-xs opacity-70" style={{ color: c.text }}>
+                  {route.trips.length} putovanja
+                </span>
               </div>
-            </CardHeader>
-
-            <CardContent>
-              <div className="space-y-3">
-                <h4 className="font-medium text-sm text-gray-700 mb-2">
-                  Polasci ({route.trips.length}):
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {route.trips.map((trip) => (
-                    <div
-                      key={trip.id}
-                      className="border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="text-sm font-medium">
-                          {format(new Date(trip.departure), 'HH:mm')} -{' '}
-                          {format(new Date(trip.arrival), 'HH:mm')}
-                        </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            new Date(trip.departure) > new Date()
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {new Date(trip.departure) > new Date()
-                            ? 'Predstoji'
-                            : 'Završeno'}
-                        </span>
-                      </div>
-
-                      <div className="text-xs text-gray-600 space-y-1">
-                        <div>
-                          Sedišta: {trip.seatsAvailable || 0} /{' '}
-                          {trip.seatsTotal}
-                        </div>
-                        <div>Rezervacije: {trip.reservations?.length || 0}</div>
-                        <div>
-                          Datum:{' '}
-                          {format(new Date(trip.departure), 'd. MMM', {
-                            locale: srLatn,
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end mt-2">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteTrip(trip.id)}
-                          disabled={deletePending}
-                          className="h-6 px-2"
-                        >
-                          {deletePending ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                          ) : (
-                            <Trash2 className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 w-7 p-0 flex-none"
+                  onClick={() => setEditingRoute({
+                    routeId: route.routeId,
+                    fromCity: route.fromCity,
+                    toCity: route.toCity,
+                    trips: route.trips,
+                    totalSeats: route.trips.reduce((s, t) => s + t.seatsTotal, 0),
+                    availableSeats: route.trips.reduce((s, t) => s + (t.seatsAvailable ?? t.seatsTotal), 0),
+                    totalReservations: route.trips.reduce((s, t) => s + t.reservations.length, 0),
+                  })}
+                  title={`Uredi rutu ${route.fromCity} → ${route.toCity}`}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 w-7 p-0 flex-none"
+                  onClick={() => handleDeleteRoute(route)}
+                  disabled={deletePending}
+                  title={`Obriši rutu ${route.fromCity} → ${route.toCity}`}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Edit Route Modal */}
-      {selectedRoute && (
+      {/* Week navigation */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setWeekStart((d) => addDays(d, -7))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium min-w-[180px] text-center">
+            {format(weekStart, 'd. MMM', { locale: srLatn })} –{' '}
+            {format(addDays(weekStart, 6), 'd. MMM yyyy.', { locale: srLatn })}
+          </span>
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setWeekStart((d) => addDays(d, 7))}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs"
+          onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+        >
+          Danas
+        </Button>
+      </div>
+
+      {/* Timetable */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        {/* Day header */}
+        <div className="flex border-b border-gray-200 bg-gray-50" style={{ minWidth: 520 }}>
+          <div className="flex-none w-12 border-r border-gray-200" />
+          {weekDays.map((day) => {
+            const today = isToday(day);
+            const hasTrips = weekTrips.some((t) => isSameDay(new Date(t.departure), day));
+            return (
+              <div
+                key={day.toISOString()}
+                className={`flex-1 text-center py-2 border-r border-gray-200 last:border-r-0 ${
+                  today ? 'bg-blue-50' : ''
+                }`}
+              >
+                <div className={`text-xs ${today ? 'text-blue-500' : 'text-gray-400'}`}>
+                  {format(day, 'EEE', { locale: srLatn })}
+                </div>
+                <div
+                  className={`text-sm font-bold ${
+                    today
+                      ? 'text-white bg-blue-500 rounded-full w-7 h-7 flex items-center justify-center mx-auto'
+                      : hasTrips
+                      ? 'text-gray-800'
+                      : 'text-gray-400'
+                  }`}
+                >
+                  {format(day, 'd')}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Scrollable grid */}
+        <div className="overflow-y-auto" style={{ maxHeight: 520 }}>
+          <div className="flex relative" style={{ minWidth: 520, height: totalHeight }}>
+            {/* Time gutter */}
+            <div className="flex-none w-12 border-r border-gray-200 relative bg-white">
+              {hours.map((h) => (
+                <div
+                  key={h}
+                  className="absolute w-full"
+                  style={{ top: (h - hourStart) * PX_PER_HOUR }}
+                >
+                  <span className="absolute -top-2.5 right-1.5 text-[10px] text-gray-400 leading-none">
+                    {String(h).padStart(2, '0')}:00
+                  </span>
+                  <div className="w-2 border-t border-gray-200 ml-auto" />
+                </div>
+              ))}
+            </div>
+
+            {/* Day columns */}
+            {weekDays.map((day) => {
+              const today = isToday(day);
+              const dayItems = tripsForDay(day);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`flex-1 relative border-r border-gray-200 last:border-r-0 ${
+                    today ? 'bg-blue-50/20' : 'bg-white'
+                  }`}
+                >
+                  {/* Hour grid lines */}
+                  {hours.map((h) => (
+                    <div
+                      key={h}
+                      className="absolute w-full border-t border-gray-100"
+                      style={{ top: (h - hourStart) * PX_PER_HOUR }}
+                    />
+                  ))}
+
+                  {/* Trip blocks */}
+                  {layoutDayTrips(dayItems).map(({ trip, color, route, col, numCols }) => {
+                    const top = getTop(trip);
+                    const height = getHeight(trip);
+                    const dep = format(new Date(trip.departure), 'HH:mm');
+                    const arr = format(new Date(trip.arrival), 'HH:mm');
+                    const w = 100 / numCols;
+                    const l = col * w;
+
+                    return (
+                      <div
+                        key={trip.id}
+                        className="absolute rounded overflow-hidden select-none cursor-pointer hover:brightness-95 transition-[filter]"
+                        onClick={() => setSelectedTrip(trip)}
+                        style={{
+                          top: top + 1,
+                          height: height - 2,
+                          left: `calc(${l}% + 2px)`,
+                          width: `calc(${w}% - 4px)`,
+                          backgroundColor: color.bg,
+                          borderLeft: `3px solid ${color.bar}`,
+                          border: `1px solid ${color.border}`,
+                          borderLeftWidth: 3,
+                          borderLeftColor: color.bar,
+                        }}
+                        title={`${route.fromCity} → ${route.toCity}\n${dep} – ${arr}\nSedišta: ${trip.seatsAvailable ?? trip.seatsTotal}/${trip.seatsTotal}`}
+                      >
+                        <div className="px-1.5 pt-0.5">
+                          <div
+                            className="text-[11px] font-bold leading-tight truncate"
+                            style={{ color: color.text }}
+                          >
+                            {dep}–{arr}
+                          </div>
+                          {height >= 46 && (
+                            <div
+                              className="text-[10px] leading-tight truncate"
+                              style={{ color: color.bar }}
+                            >
+                              {route.fromCity} → {route.toCity}
+                            </div>
+                          )}
+                          {height >= 62 && (
+                            <div
+                              className="text-[10px] leading-tight"
+                              style={{ color: color.text, opacity: 0.75 }}
+                            >
+                              {trip.seatsAvailable ?? trip.seatsTotal}/{trip.seatsTotal} sed.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {editingRoute && (
         <EditRouteModal
-          isOpen={editModalOpen}
-          onClose={handleCloseModal}
-          route={selectedRoute}
+          isOpen={!!editingRoute}
+          onClose={(saved) => { setEditingRoute(null); if (saved) router.refresh(); }}
+          route={editingRoute}
         />
       )}
+      <TripReservationsModal
+        trip={selectedTrip}
+        onClose={() => setSelectedTrip(null)}
+      />
     </div>
   );
 }
