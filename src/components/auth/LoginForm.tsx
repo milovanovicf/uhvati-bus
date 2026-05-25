@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,20 +42,20 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
       {error && <p className="text-red-500">{error}</p>}
       <Input
         type="email"
-        placeholder="Email"
+        placeholder={t('auth.emailPlaceholder')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
       />
       <Input
         type="password"
-        placeholder="Lozinka"
+        placeholder={t('auth.passwordPlaceholder')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
       <Button type="submit" className="cursor-pointer">
-        Prijavi se
+        {t('auth.loginBtn')}
       </Button>
     </form>
   );

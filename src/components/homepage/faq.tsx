@@ -6,53 +6,30 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export default function FAQ() {
+  const { t } = useTranslation();
+
+  const items = [
+    { q: t('faq.q1'), a: t('faq.a1') },
+    { q: t('faq.q2'), a: t('faq.a2') },
+    { q: t('faq.q3'), a: t('faq.a3') },
+    { q: t('faq.q4'), a: t('faq.a4') },
+  ];
+
   return (
     <section className="max-w-3xl mx-auto py-15 px-5 sm:py-50">
       <h2 className="text-6xl font-bold mb-6 sm:text-center">
-        Najčešće postavljana pitanja
+        {t('faq.title')}
       </h2>
       <Accordion type="single" collapsible className="w-full space-y-2">
-        <AccordionItem value="item-1">
-          <AccordionTrigger className="text-xl">
-            Kako mogu da rezervišem kartu?
-          </AccordionTrigger>
-          <AccordionContent className="text-base">
-            Popunite formular za rezervaciju sa rutom, datumom i brojem sedišta,
-            kliknite na “Rezerviši” i vaša karta će biti zabeležena.
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="item-2">
-          <AccordionTrigger className="text-xl">
-            Da li mi je potreban nalog za rezervaciju?
-          </AccordionTrigger>
-          <AccordionContent className="text-base">
-            Nije potreban nalog. Dovoljno je da popunite podatke u formularu i
-            izvršite rezervaciju.
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="item-3">
-          <AccordionTrigger className="text-xl">
-            Da li mogu da otkažem ili izmenim rezervaciju?
-          </AccordionTrigger>
-          <AccordionContent className="text-base">
-            Možete nas kontaktirati za otkazivanje ili izmenu rezervacije
-            najkasnije 24 sata pre polaska.
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="item-4">
-          <AccordionTrigger className="text-xl">
-            Kako i gde mogu da platim kartu?
-          </AccordionTrigger>
-          <AccordionContent className="text-base">
-            Plaćanje se vrši u autobusu. U zavisnosti od prevoznika kartu
-            plaćate gotovinom ili karticama.
-          </AccordionContent>
-        </AccordionItem>
+        {items.map((item, i) => (
+          <AccordionItem key={i} value={`item-${i + 1}`}>
+            <AccordionTrigger className="text-xl">{item.q}</AccordionTrigger>
+            <AccordionContent className="text-base">{item.a}</AccordionContent>
+          </AccordionItem>
+        ))}
       </Accordion>
     </section>
   );

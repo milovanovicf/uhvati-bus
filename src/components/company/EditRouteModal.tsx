@@ -12,10 +12,11 @@ import {
 } from '@/components/ui/dialog';
 import { Clock, Plus, Trash2, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
-import { srLatn } from 'date-fns/locale';
+import { srLatn, enUS } from 'date-fns/locale';
 import { DateTime } from 'luxon';
 import { deleteTrip, createMultipleTrips, updateTripTimes, getRouteInfo, updateRouteMetadata, updateRouteSeats } from '@/app/actions';
 import { TripWithDetails } from './CompanyClient';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export interface RouteGroup {
   routeId: number;
@@ -48,6 +49,9 @@ export default function EditRouteModal({
   onClose,
   route,
 }: EditRouteModalProps) {
+  const { language, t } = useTranslation();
+  const locale = language === 'en' ? enUS : srLatn;
+
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [seatsTotal, setSeatsTotal] = useState(50);
   const [durationHours, setDurationHours] = useState(0);
@@ -63,7 +67,6 @@ export default function EditRouteModal({
     return arr.diff(dep, 'minutes').minutes;
   };
 
-  // Fetch saved duration/distance for this route
   React.useEffect(() => {
     if (!isOpen) return;
     const fromId = route.trips[0]?.route?.from?.id;
@@ -78,8 +81,6 @@ export default function EditRouteModal({
     });
   }, [isOpen, route]);
 
-  // Deduplicate trips by time pattern — many recurring trips share the same
-  // departure/arrival time; show each unique pattern once.
   React.useEffect(() => {
     if (route.trips.length > 0) {
       const slotMap = new Map<string, TimeSlot>();
@@ -162,8 +163,8 @@ export default function EditRouteModal({
           (dep2 <= dep1 && arr2 >= arr1);
         if (overlap) {
           overlaps.push(
-            `Polazak #${i + 1} (${s1.departureTime}–${s1.arrivalTime}) ` +
-              `se preklapa sa polaskom #${j + 1} (${s2.departureTime}–${s2.arrivalTime})`,
+            `${t('editRoute.departureN', { n: String(i + 1) })} (${s1.departureTime}–${s1.arrivalTime}) ` +
+              `/ ${t('editRoute.departureN', { n: String(j + 1) })} (${s2.departureTime}–${s2.arrivalTime})`,
           );
         }
       }
@@ -185,16 +186,15 @@ export default function EditRouteModal({
     const overlaps = checkForOverlaps(timeSlots);
     if (overlaps.length > 0) {
       const proceed = confirm(
-        `Detektovana su preklapanja između polazaka:\n${overlaps.join('\n')}\n\nNapomena: ovo može biti normalno ako ste ručno izmenili vreme za pojedinačna putovanja (koja su na različitim danima).\n\nDa li želite da nastavite?`
+        `${t('editRoute.overlapWarningIntro')}\n${overlaps.join('\n')}\n\n${t('editRoute.overlapWarningNote')}\n\n${t('editRoute.overlapWarningConfirm')}`
       );
       if (!proceed) return;
     }
     setError(null);
 
-    // Calculate what will change and ask for confirmation
-    const tripById = new Map(route.trips.map((t) => [t.id, t]));
+    const tripById = new Map(route.trips.map((trip) => [trip.id, trip]));
     const keptTripIds = new Set(timeSlots.flatMap((s) => s.tripIds));
-    const willDelete = route.trips.filter((t) => !keptTripIds.has(t.id)).length;
+    const willDelete = route.trips.filter((trip) => !keptTripIds.has(trip.id)).length;
     const willUpdate = timeSlots
       .filter((s) => {
         if (s.tripIds.length === 0) return false;
@@ -206,8 +206,8 @@ export default function EditRouteModal({
       })
       .reduce((sum, s) => sum + s.tripIds.length, 0);
     const existingDateCount = new Map(
-      route.trips.map((t) => {
-        const d = new Date(t.departure);
+      route.trips.map((trip) => {
+        const d = new Date(trip.departure);
         return [`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`, true];
       }),
     ).size;
@@ -215,28 +215,26 @@ export default function EditRouteModal({
     const willCreate = newSlotCount * existingDateCount;
 
     const lines: string[] = [];
-    if (willUpdate > 0) lines.push(`• Promeniti vreme za ${willUpdate} putovanja`);
-    if (willDelete > 0) lines.push(`• Trajno obrisati ${willDelete} putovanja`);
-    if (willCreate > 0) lines.push(`• Kreirati ${willCreate} novih putovanja`);
+    if (willUpdate > 0) lines.push(t('editRoute.changeUpdate', { count: String(willUpdate) }));
+    if (willDelete > 0) lines.push(t('editRoute.changeDelete', { count: String(willDelete) }));
+    if (willCreate > 0) lines.push(t('editRoute.changeCreate', { count: String(willCreate) }));
 
-    if (lines.length > 0 && !confirm(`Ova akcija će:\n${lines.join('\n')}\n\nDa li ste sigurni?`)) {
+    if (lines.length > 0 && !confirm(`${t('editRoute.confirmChangesIntro')}\n${lines.join('\n')}\n\n${t('editRoute.confirmChangesQuestion')}`)) {
       return;
     }
 
     startTransition(async () => {
       try {
-        const tripById = new Map(route.trips.map((t) => [t.id, t]));
+        const tripById = new Map(route.trips.map((trip) => [trip.id, trip]));
         const fromId = route.trips[0]?.route?.from?.id ?? 1;
         const toId = route.trips[0]?.route?.to?.id ?? 2;
 
-        // Slots removed entirely — delete all their trips
         const keptTripIds = new Set(timeSlots.flatMap((s) => s.tripIds));
-        const tripsToDelete = route.trips.filter((t) => !keptTripIds.has(t.id));
+        const tripsToDelete = route.trips.filter((trip) => !keptTripIds.has(trip.id));
         for (const trip of tripsToDelete) {
           await deleteTrip(trip.id);
         }
 
-        // Existing slots whose time was changed — update each trip in place
         const modifiedSlots = timeSlots.filter((s) => {
           if (s.tripIds.length === 0) return false;
           const sample = tripById.get(s.tripIds[0]);
@@ -258,19 +256,18 @@ export default function EditRouteModal({
           }
         }
 
-        // Brand-new slots — create one trip per existing date in the route
         const newSlots = timeSlots.filter((s) => s.tripIds.length === 0);
         if (newSlots.length > 0) {
           const existingDates = Array.from(
             new Map(
-              route.trips.map((t) => {
-                const d = new Date(t.departure);
+              route.trips.map((trip) => {
+                const d = new Date(trip.departure);
                 const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
                 return [key, d];
               }),
             ).values(),
           );
-          if (existingDates.length === 0) throw new Error('Nema postojećih putovanja za ovu rutu');
+          if (existingDates.length === 0) throw new Error(t('editRoute.noTripsForRoute'));
           const tripsData = newSlots.flatMap((slot) =>
             existingDates.map((date) => ({
               fromId,
@@ -283,7 +280,6 @@ export default function EditRouteModal({
           await createMultipleTrips(tripsData);
         }
 
-        // Update seatsTotal for all existing trips if it changed
         const originalSeats = route.trips[0]?.seatsTotal ?? 50;
         if (seatsTotal !== originalSeats) {
           await updateRouteSeats(route.routeId, seatsTotal);
@@ -301,7 +297,7 @@ export default function EditRouteModal({
         setSuccess(true);
         setTimeout(() => { onClose(true); setSuccess(false); }, 2000);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Greška pri čuvanju promena');
+        setError(err instanceof Error ? err.message : t('editRoute.errorSaving'));
       }
     });
   };
@@ -318,31 +314,31 @@ export default function EditRouteModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Uredi rutu: {route.fromCity} → {route.toCity}
+            {t('editRoute.title', { from: route.fromCity, to: route.toCity })}
           </DialogTitle>
         </DialogHeader>
 
         {success ? (
           <div className="text-center py-6">
             <div className="text-green-600 text-lg font-medium mb-2">
-              ✅ Promene uspešno sačuvane!
+              ✅ {t('editRoute.saveSuccess')}
             </div>
           </div>
         ) : (
           <>
             {error && (
               <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                <div className="font-medium mb-1">Greška:</div>
+                <div className="font-medium mb-1">{t('editRoute.errorLabel')}</div>
                 <div className="text-sm whitespace-pre-line">{error}</div>
               </div>
             )}
 
             <div className="space-y-6">
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-medium mb-2">Informacije o ruti</h3>
+                <h3 className="font-medium mb-2">{t('editRoute.routeInfo')}</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <Label>Ukupan broj sedišta po putovanju</Label>
+                    <Label>{t('editRoute.totalSeatsPerTrip')}</Label>
                     <Input
                       type="number"
                       value={seatsTotal}
@@ -354,11 +350,14 @@ export default function EditRouteModal({
                   </div>
                   <div className="flex items-end">
                     <div className="text-sm text-gray-600">
-                      Trenutno: {route.trips.length} polazaka
+                      {t('editRoute.currentDepartures', { count: String(route.trips.length) })}
                     </div>
                   </div>
                   <div>
-                    <Label>Trajanje vožnje <span className="text-gray-400 font-normal">(opciono)</span></Label>
+                    <Label>
+                      {t('tripModal.driveDuration')}{' '}
+                      <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
+                    </Label>
                     <div className="flex items-center gap-1 mt-1 border rounded-md px-2 py-1 bg-white w-fit">
                       <input
                         type="number"
@@ -381,7 +380,10 @@ export default function EditRouteModal({
                     </div>
                   </div>
                   <div>
-                    <Label>Distanca <span className="text-gray-400 font-normal">(opciono)</span></Label>
+                    <Label>
+                      {t('tripModal.distance')}{' '}
+                      <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
+                    </Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input
                         type="number"
@@ -399,9 +401,9 @@ export default function EditRouteModal({
 
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium">Polasci</h3>
+                  <h3 className="font-medium">{t('editRoute.departures')}</h3>
                   <Button type="button" onClick={addTimeSlot} size="sm" disabled={isPending}>
-                    <Plus className="h-4 w-4 mr-1" /> Dodaj polazak
+                    <Plus className="h-4 w-4 mr-1" /> {t('editRoute.addDeparture')}
                   </Button>
                 </div>
 
@@ -416,15 +418,15 @@ export default function EditRouteModal({
                           <div className="flex items-center gap-2 text-sm font-medium">
                             <Clock className="h-4 w-4 text-gray-600" />
                             <span className="text-gray-600">
-                              Polazak #{index + 1}
+                              {t('editRoute.departureN', { n: String(index + 1) })}
                             </span>
                             {slot.tripIds.length > 0 && (
                               <span className="text-xs text-blue-500 font-normal">
-                                ({slot.tripIds.length} {slot.tripIds.length === 1 ? 'putovanje' : 'putovanja'})
+                                ({slot.tripIds.length} {slot.tripIds.length === 1 ? t('editRoute.tripSingular') : t('editRoute.tripPlural')})
                               </span>
                             )}
                             {slot.tripIds.length === 0 && (
-                              <span className="text-xs text-green-600 font-normal">(novo)</span>
+                              <span className="text-xs text-green-600 font-normal">{t('editRoute.newSlot')}</span>
                             )}
                           </div>
                           {timeSlots.length > 1 && (
@@ -443,14 +445,14 @@ export default function EditRouteModal({
                         {slot.dateFrom && slot.dateTo && (
                           <div className="mb-3 text-xs text-gray-500">
                             {slot.dateFrom.toDateString() === slot.dateTo.toDateString()
-                              ? format(slot.dateFrom, 'd. MMMM yyyy.', { locale: srLatn })
-                              : `od ${format(slot.dateFrom, 'd. MMM yyyy.', { locale: srLatn })} do ${format(slot.dateTo, 'd. MMM yyyy.', { locale: srLatn })}`}
+                              ? format(slot.dateFrom, 'd. MMMM yyyy.', { locale })
+                              : `${t('editRoute.dateFrom')} ${format(slot.dateFrom, 'd. MMM yyyy.', { locale })} ${t('editRoute.dateTo')} ${format(slot.dateTo, 'd. MMM yyyy.', { locale })}`}
                           </div>
                         )}
 
                         <div className="grid grid-cols-3 gap-4">
                           <div>
-                            <Label className="text-xs">Vreme polaska</Label>
+                            <Label className="text-xs">{t('editRoute.departureTime')}</Label>
                             <Input
                               type="time"
                               value={slot.departureTime}
@@ -460,7 +462,7 @@ export default function EditRouteModal({
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Vreme dolaska</Label>
+                            <Label className="text-xs">{t('editRoute.arrivalTime')}</Label>
                             <Input
                               type="time"
                               value={slot.arrivalTime}
@@ -470,7 +472,7 @@ export default function EditRouteModal({
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Trajanje</Label>
+                            <Label className="text-xs">{t('editRoute.duration')}</Label>
                             <div className="flex items-center h-10 px-3 border rounded-md bg-gray-100 text-sm text-gray-600">
                               {Math.floor(slot.duration / 60)}h {slot.duration % 60}m
                             </div>
@@ -484,10 +486,10 @@ export default function EditRouteModal({
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="ghost" onClick={handleClose} disabled={isPending}>
-                  Otkaži
+                  {t('editRoute.cancel')}
                 </Button>
                 <Button onClick={handleSave} disabled={isPending}>
-                  {isPending ? 'Čuvanje...' : 'Sačuvaj promene'}
+                  {isPending ? t('dashboard.saving') : t('editRoute.saveChanges')}
                 </Button>
               </div>
             </div>

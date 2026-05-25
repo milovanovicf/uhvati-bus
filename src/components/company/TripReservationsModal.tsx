@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Trash2, Users, MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { srLatn } from 'date-fns/locale';
 import { handleReservationDelete, updateTripTimes } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 import { TripWithDetails, TripReservation } from './CompanyClient';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { srLatn, enUS } from 'date-fns/locale';
 
 const { DateTime } = require('luxon');
 
@@ -21,6 +22,8 @@ interface Props {
 
 export default function TripReservationsModal({ trip, onClose }: Props) {
   const router = useRouter();
+  const { language, t } = useTranslation();
+  const dateFnsLocale = language === 'sr' ? srLatn : enUS;
   const [deletePending, startDeleteTransition] = useTransition();
   const [timePending, startTimeTransition] = useTransition();
   const [timeError, setTimeError] = useState<string | null>(null);
@@ -31,7 +34,6 @@ export default function TripReservationsModal({ trip, onClose }: Props) {
   const [editDep, setEditDep] = useState(format(dep, 'HH:mm'));
   const [editArr, setEditArr] = useState(format(arr, 'HH:mm'));
 
-  // Reset time fields when trip changes
   React.useEffect(() => {
     if (!trip) return;
     setEditDep(format(new Date(trip.departure), 'HH:mm'));
@@ -54,8 +56,10 @@ export default function TripReservationsModal({ trip, onClose }: Props) {
   }
 
   function handleSaveTime() {
+    if (!trip) return;
     setTimeError(null);
     startTimeTransition(async () => {
+      if (!trip) return;
       try {
         const tripDate = new Date(trip.departure);
         const isNextDay = editArr < editDep;
@@ -69,7 +73,7 @@ export default function TripReservationsModal({ trip, onClose }: Props) {
         );
         router.refresh();
       } catch (err: unknown) {
-        setTimeError(err instanceof Error ? err.message : 'Greška pri čuvanju.');
+        setTimeError(err instanceof Error ? err.message : t('dashboard.savingError'));
       }
     });
   }
@@ -77,13 +81,13 @@ export default function TripReservationsModal({ trip, onClose }: Props) {
   const timeChanged = editDep !== format(dep, 'HH:mm') || editArr !== format(arr, 'HH:mm');
 
   function handleDelete(id: number) {
-    if (!confirm('Da li ste sigurni da želite da obrišete ovu rezervaciju?')) return;
+    if (!confirm(t('dashboard.deleteReservationConfirm'))) return;
     startDeleteTransition(async () => {
       const result = await handleReservationDelete(id);
       if (result.success) {
         router.refresh();
       } else {
-        alert(`Greška: ${result.error}`);
+        alert(`${t('dashboard.deleteError', { message: result.error ?? '' })}`);
       }
     });
   }
@@ -101,22 +105,22 @@ export default function TripReservationsModal({ trip, onClose }: Props) {
         <div className="flex items-center gap-4 text-sm text-gray-600 pb-3 border-b">
           <span className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />
-            {format(dep, 'EEEE, d. MMMM yyyy.', { locale: srLatn })}
+            {format(dep, 'EEEE, d. MMMM yyyy.', { locale: dateFnsLocale })}
           </span>
           <span className="flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {bookedSeats}/{trip.seatsTotal} sedišta zauzeto
+            {t('dashboard.seatsTaken', { booked: String(bookedSeats), total: String(trip.seatsTotal) })}
           </span>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-3 border">
-          <p className="text-xs text-gray-500 mb-2 font-medium">Vreme polaska za ovaj dan</p>
+          <p className="text-xs text-gray-500 mb-2 font-medium">{t('dashboard.editTime')}</p>
           {timeError && (
             <p className="text-xs text-red-600 mb-2">{timeError}</p>
           )}
           <div className="flex items-end gap-3">
             <div>
-              <Label className="text-xs">Polazak</Label>
+              <Label className="text-xs">{t('dashboard.departure')}</Label>
               <Input
                 type="time"
                 value={editDep}
@@ -126,7 +130,7 @@ export default function TripReservationsModal({ trip, onClose }: Props) {
               />
             </div>
             <div>
-              <Label className="text-xs">Dolazak</Label>
+              <Label className="text-xs">{t('dashboard.arrival')}</Label>
               <Input
                 type="time"
                 value={editArr}
@@ -140,21 +144,21 @@ export default function TripReservationsModal({ trip, onClose }: Props) {
               onClick={handleSaveTime}
               disabled={timePending || !timeChanged}
             >
-              {timePending ? 'Čuvanje...' : 'Sačuvaj vreme'}
+              {timePending ? t('dashboard.saving') : t('dashboard.saveTime')}
             </Button>
           </div>
         </div>
 
         {trip.reservations.length === 0 ? (
-          <p className="text-center text-gray-400 py-6">Nema rezervacija za ovo putovanje.</p>
+          <p className="text-center text-gray-400 py-6">{t('dashboard.noReservations')}</p>
         ) : (
           <table className="w-full table-auto text-sm">
             <thead>
               <tr className="text-left text-gray-500 border-b">
                 <th className="pb-2 font-medium">#</th>
-                <th className="pb-2 font-medium">Putnik</th>
-                <th className="pb-2 font-medium">Email</th>
-                <th className="pb-2 font-medium">Sedišta</th>
+                <th className="pb-2 font-medium">{t('dashboard.colPassenger')}</th>
+                <th className="pb-2 font-medium">{t('dashboard.colEmail')}</th>
+                <th className="pb-2 font-medium">{t('dashboard.colSeats')}</th>
                 <th className="pb-2" />
               </tr>
             </thead>

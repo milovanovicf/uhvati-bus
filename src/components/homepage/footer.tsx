@@ -1,26 +1,28 @@
+'use client';
+
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Facebook, Instagram, Mail, Phone } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-muted px-5 py-15 mt-12 text-md text-muted-foreground sm:px-15 md:px-20 lg:px-30">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         {/* About */}
         <div>
-          <h4 className="text-base font-semibold text-foreground text-lg mb-2">
-            O nama
+          <h4 className="font-semibold text-foreground text-lg mb-2">
+            {t('footer.aboutTitle')}
           </h4>
-          <p className="text-md leading-relaxed">
-            Pomažemo vam da jednostavno i efikasno rezervišete svoje usluge
-            putem našeg sistema.
-          </p>
+          <p className="text-md leading-relaxed">{t('footer.aboutText')}</p>
         </div>
 
         <div>
-          <h4 className="text-base font-semibold text-foreground text-lg mb-2">
-            Kontakt
+          <h4 className="font-semibold text-foreground text-lg mb-2">
+            {t('footer.contactTitle')}
           </h4>
           <ul className="space-y-1">
             <li className="flex items-center gap-2">
@@ -33,15 +35,11 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="text-base font-semibold text-foreground text-lg mb-2">
-            Društvene mreže
+          <h4 className="font-semibold text-foreground text-lg mb-2">
+            {t('footer.socialTitle')}
           </h4>
           <div className="flex items-center gap-4">
-            <a
-              href="#"
-              aria-label="Instagram"
-              className="hover:text-foreground"
-            >
+            <a href="#" aria-label="Instagram" className="hover:text-foreground">
               <Instagram className="w-6 h-6" />
             </a>
             <a href="#" aria-label="Facebook" className="hover:text-foreground">
@@ -51,17 +49,17 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="text-base font-semibold text-foreground text-lg mb-2">
-            Prijava na novosti
+          <h4 className="font-semibold text-foreground text-lg mb-2">
+            {t('footer.newsletterTitle')}
           </h4>
           <form className="flex items-center space-x-2 md:flex-col md:items-baseline md:space-y-3">
             <Input
               type="email"
-              placeholder="Vaš email"
+              placeholder={t('footer.newsletterPlaceholder')}
               className="flex-1 text-md md:flex-auto md:w-60"
             />
             <Button type="submit" className="text-md">
-              Prijavi se
+              {t('footer.newsletterBtn')}
             </Button>
           </form>
         </div>
@@ -70,7 +68,7 @@ export default function Footer() {
       <Separator className="my-6" />
 
       <p className="text-md text-center">
-        © {new Date().getFullYear()} UhvatiBus d.o.o. Sva prava zadržana.
+        {t('footer.copyright', { year: String(new Date().getFullYear()) })}
       </p>
     </footer>
   );

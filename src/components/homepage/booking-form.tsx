@@ -25,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 const { DateTime } = require('luxon');
 
 export default function BookingForm() {
@@ -37,14 +38,15 @@ export default function BookingForm() {
   const [seats, setSeats] = useState(1);
   const [time, setTime] = useState('10:30');
   const [filterByTime, setFilterByTime] = useState(false);
+  const { language, t } = useTranslation();
 
   const formattedDate = date
-    ? DateTime.fromJSDate(date).setLocale('sr-Latn').toFormat('d. LLL yyyy')
+    ? DateTime.fromJSDate(date).setLocale(language === 'sr' ? 'sr-Latn' : 'en').toFormat('d. LLL yyyy')
     : '';
 
   const handleSearch = () => {
     if (!fromCity || !toCity || !date) {
-      alert('Izaberite polazni grad, odredišni grad i datum.');
+      alert(t('booking.validation'));
       return;
     }
 
@@ -65,7 +67,7 @@ export default function BookingForm() {
   return (
     <Card className="w-90">
       <CardHeader>
-        <CardTitle>Pretraga</CardTitle>
+        <CardTitle>{t('booking.title')}</CardTitle>
       </CardHeader>
 
       <CardContent className="px-5">
@@ -73,7 +75,7 @@ export default function BookingForm() {
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex flex-col gap-2">
               <Label htmlFor="date-picker" className="px-1">
-                Datum
+                {t('booking.date')}
               </Label>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
@@ -82,7 +84,7 @@ export default function BookingForm() {
                     id="date-picker"
                     className="justify-between font-normal border p-2 rounded"
                   >
-                    {formattedDate || 'Izaberi datum'}
+                    {formattedDate || t('booking.selectDate')}
                     <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -103,7 +105,7 @@ export default function BookingForm() {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 px-1">
-                <Label htmlFor="time-picker">Vreme</Label>
+                <Label htmlFor="time-picker">{t('booking.time')}</Label>
                 <label className="flex items-center gap-1 text-xs text-gray-400 font-normal cursor-pointer">
                   <input
                     type="checkbox"
@@ -111,7 +113,7 @@ export default function BookingForm() {
                     onChange={(e) => setFilterByTime(e.target.checked)}
                     className="accent-chart-4"
                   />
-                  filtriraj
+                  {t('booking.timeFilter')}
                 </label>
               </div>
               <Input
@@ -130,7 +132,7 @@ export default function BookingForm() {
               style={{ maxWidth: '200px', width: '200px' }}
             >
               <CitySelector
-                label="Od"
+                label={t('booking.from')}
                 selectedCity={fromCity}
                 setSelectedCity={setFromCity}
                 excludeCityIds={toCity ? [toCity.id] : []}
@@ -146,7 +148,7 @@ export default function BookingForm() {
                   setToCity(temp);
                 }}
                 className="rounded-full h-10 w-10 bg-white text-gray-800 shadow-none hover:bg-gray-800 hover:text-white"
-                title="Zameni gradove"
+                title={t('booking.swapCities')}
               >
                 <ArrowLeftRight className="h-5 w-5" />
               </Button>
@@ -156,7 +158,7 @@ export default function BookingForm() {
               style={{ maxWidth: '200px', width: '200px' }}
             >
               <CitySelector
-                label="Do"
+                label={t('booking.to')}
                 selectedCity={toCity}
                 setSelectedCity={setToCity}
                 excludeCityIds={fromCity ? [fromCity.id] : []}
@@ -165,20 +167,20 @@ export default function BookingForm() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Ime i Prezime{' '}
-              <span className="text-gray-400 font-normal">(opciono)</span>
+              {t('booking.fullName')}{' '}
+              <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
             </label>
             <Input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full border p-2 rounded"
-              placeholder="Ime i Prezime"
+              placeholder={t('booking.fullName')}
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Email <span className="text-gray-400 font-normal">(opciono)</span>
+              {t('booking.email')} <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
             </label>
             <Input
               type="email"
@@ -190,8 +192,8 @@ export default function BookingForm() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Broj sedišta{' '}
-              <span className="text-gray-400 font-normal">(opciono)</span>
+              {t('booking.seats')}{' '}
+              <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
             </label>
             <Input
               type="number"
@@ -208,7 +210,7 @@ export default function BookingForm() {
               className="bg-chart-4 text-white cursor-pointer"
               onClick={handleSearch}
             >
-              Pogledaj rute
+              {t('booking.searchBtn')}
             </Button>
             <TooltipProvider>
               <Tooltip>
@@ -218,10 +220,7 @@ export default function BookingForm() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-s text-base bg-gray-600">
-                  <p>
-                    Klikom na <strong>Pogledaj rute</strong> videćete sve
-                    dostupne polaske za izabrani datum i vreme.
-                  </p>
+                  <p>{t('booking.tooltipText')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
