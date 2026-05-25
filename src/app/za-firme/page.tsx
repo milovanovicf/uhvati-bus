@@ -11,62 +11,69 @@ import {
   Users,
   BarChart,
 } from 'lucide-react';
-
-const features = [
-  {
-    icon: MapPin,
-    title: 'Dodajte rute',
-    description:
-      'Kreirajte nove linije sa polazištem i odredištem. Svaka ruta može imati razdaljinu i prosečno trajanje putovanja.',
-  },
-  {
-    icon: Calendar,
-    title: 'Planirajte polaske',
-    description:
-      'Kreirajte polaske za svaku rutu — izaberite datum, vreme i broj slobodnih sedišta. Jednostavno upravljanje svim polascima.',
-  },
-  {
-    icon: Users,
-    title: 'Pregled rezervacija',
-    description:
-      'Pratite sve rezervacije na jednom mestu. Vidite ko je rezervisao, koliko sedišta i status svake rezervacije.',
-  },
-  {
-    icon: BarChart,
-    title: 'Statistika i uvid',
-    description:
-      'Pregled svih vaših ruta, polazaka i popularnosti. Donosite bolje poslovne odluke na osnovu podataka.',
-  },
-];
-
-const steps = [
-  {
-    number: '01',
-    title: 'Registrujte firmu',
-    description:
-      'Popunite formu za registraciju sa nazivom firme, email adresom i lozinkom. Proces je brz i jednostavan.',
-  },
-  {
-    number: '02',
-    title: 'Dodajte rute',
-    description:
-      'Kreirajte rute koje nudite — svaka ruta povezuje dva grada sa informacijama o razdaljini i trajanju.',
-  },
-  {
-    number: '03',
-    title: 'Kreirajte polaske',
-    description:
-      'Za svaku rutu dodajte polaske sa tačnim datumom, vremenom i brojem sedišta. Sprječite preklapanje termina.',
-  },
-  {
-    number: '04',
-    title: 'Primitite rezervacije',
-    description:
-      'Putnici rezervišu sedišta direktno preko platforme. Sve rezervacije automatski možete pregledati u svom panelu.',
-  },
-];
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export default function ForCompaniesPage() {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      number: '01',
+      title: t('forCompanies.s1Title'),
+      description: t('forCompanies.s1Desc'),
+    },
+    {
+      number: '02',
+      title: t('forCompanies.s2Title'),
+      description: t('forCompanies.s2Desc'),
+    },
+    {
+      number: '03',
+      title: t('forCompanies.s3Title'),
+      description: t('forCompanies.s3Desc'),
+    },
+    {
+      number: '04',
+      title: t('forCompanies.s4Title'),
+      description: t('forCompanies.s4Desc'),
+    },
+  ];
+
+  const features = [
+    {
+      icon: MapPin,
+      title: t('forCompanies.f1Title'),
+      description: t('forCompanies.f1Desc'),
+    },
+    {
+      icon: Calendar,
+      title: t('forCompanies.f2Title'),
+      description: t('forCompanies.f2Desc'),
+    },
+    {
+      icon: Users,
+      title: t('forCompanies.f3Title'),
+      description: t('forCompanies.f3Desc'),
+    },
+    {
+      icon: BarChart,
+      title: t('forCompanies.f4Title'),
+      description: t('forCompanies.f4Desc'),
+    },
+  ];
+
+  const benefits = [
+    t('forCompanies.b1'),
+    t('forCompanies.b2'),
+    t('forCompanies.b3'),
+    t('forCompanies.b4'),
+    t('forCompanies.b5'),
+    t('forCompanies.b6'),
+    t('forCompanies.b7'),
+    t('forCompanies.b8'),
+    t('forCompanies.b9'),
+  ];
+
   return (
     <>
       <Header />
@@ -75,11 +82,10 @@ export default function ForCompaniesPage() {
         <section className="relative py-25 px-5 sm:px-15 md:px-25 lg:px-40 bg-gradient-to-b from-orange-50 to-white">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-              Za firme
+              {t('forCompanies.heroTitle')}
             </h1>
             <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-              UhvatBus platforma pruža vam alat za upravljanje autobuskim
-              linijama, polascima i rezervacijama — sve na jednom mestu.
+              {t('forCompanies.heroSubtitle')}
             </p>
           </div>
         </section>
@@ -89,10 +95,10 @@ export default function ForCompaniesPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-                Kako funkcioniše?
+                {t('forCompanies.howTitle')}
               </h2>
               <p className="text-xl text-gray-600">
-                Četiri jednostavna koraka do digitalizacije vašeg poslovanja
+                {t('forCompanies.howSubtitle')}
               </p>
             </div>
 
@@ -102,7 +108,7 @@ export default function ForCompaniesPage() {
                   <div className="text-7xl font-bold text-orange-100 absolute -top-4 -left-2">
                     {step.number}
                   </div>
-                  <Card className="hover:shadow-lg transition-shadow h-60 pt-12">
+                  <Card className="hover:shadow-lg transition-shadow min-h-80 pt-12">
                     <CardHeader>
                       <CardTitle className="text-xl">{step.title}</CardTitle>
                     </CardHeader>
@@ -123,10 +129,10 @@ export default function ForCompaniesPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-                Mogućnosti platforme
+                {t('forCompanies.featuresTitle')}
               </h2>
               <p className="text-xl text-gray-600">
-                Sve što vam treba za upravljanje prevozom
+                {t('forCompanies.featuresSubtitle')}
               </p>
             </div>
 
@@ -158,25 +164,15 @@ export default function ForCompaniesPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-                Zašto UhvatBus?
+                {t('forCompanies.benefitsTitle')}
               </h2>
               <p className="text-xl text-gray-600">
-                Prednosti korišćenja naše platforme
+                {t('forCompanies.benefitsSubtitle')}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[
-                'Jednostavno dodavanje i upravljanje ruta',
-                'Automatsko praćenje rezervacija',
-                'Sprečavanje preklapanja polazaka',
-                'Pregled popularnosti linija',
-                'Digitalizacija bez dodatnih troškova',
-                'Podrška za sve veličine prevoznika',
-                'Intuitivan interfejs',
-                'Sigurno čuvanje podataka',
-                'Pristup statistici u realnom vremenu',
-              ].map((benefit) => (
+              {benefits.map((benefit) => (
                 <div key={benefit} className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
                   <span className="text-gray-700">{benefit}</span>
@@ -191,17 +187,16 @@ export default function ForCompaniesPage() {
           <div className="max-w-3xl mx-auto">
             <Bus className="h-16 w-16 mx-auto mb-6 opacity-80" />
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Spremni da se pridružite?
+              {t('forCompanies.ctaTitle')}
             </h2>
             <p className="text-xl text-orange-100 mb-8">
-              Registrujte svoju firmu i počnite da upravljate linijama već
-              danas. Brza registracija, instant pristup panelu.
+              {t('forCompanies.ctaSubtitle')}
             </p>
             <a
               href="/?auth=register"
               className="inline-block bg-white text-orange-500 font-bold text-lg px-10 py-4 rounded-full hover:bg-orange-50 transition-colors"
             >
-              Registruj firmu
+              {t('forCompanies.ctaBtn')}
             </a>
           </div>
         </section>

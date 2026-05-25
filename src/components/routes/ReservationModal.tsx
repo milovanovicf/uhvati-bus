@@ -14,6 +14,7 @@ import {
 import { Clock, MapPin, Users } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { handleReservationCreate } from '@/app/actions';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface Trip {
   id: number;
@@ -66,6 +67,7 @@ export default function ReservationModal({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { language, t } = useTranslation();
 
   // Sync pre-fill values when the modal is opened
   React.useEffect(() => {
@@ -84,7 +86,7 @@ export default function ReservationModal({
 
   const formatDate = (dateString: string) => {
     return DateTime.fromISO(dateString)
-      .setLocale('sr-Latn')
+      .setLocale(language === 'sr' ? 'sr-Latn' : 'en')
       .toFormat('d. LLL yyyy');
   };
 
@@ -108,17 +110,17 @@ export default function ReservationModal({
     if (!trip) return;
 
     if (!fullName || !email || !seats) {
-      setError('Sva polja su obavezna');
+      setError(t('reservation.allRequired'));
       return;
     }
 
     if (seats > trip.availableSeats) {
-      setError(`Maksimalno ${trip.availableSeats} sedišta je dostupno`);
+      setError(t('reservation.maxSeatsError', { count: trip.availableSeats }));
       return;
     }
 
     if (seats < 1) {
-      setError('Morate rezervisati bar 1 sedište');
+      setError(t('reservation.minSeatsError'));
       return;
     }
 
@@ -150,10 +152,10 @@ export default function ReservationModal({
             setSuccess(false);
           }, 1500);
         } else {
-          setError(result.error || 'Greška pri kreiranju rezervacije');
+          setError(result.error || t('reservation.error'));
         }
       } catch (err: any) {
-        setError(err.message || 'Greška pri kreiranju rezervacije');
+        setError(err.message || t('reservation.error'));
       }
     });
   };
@@ -172,16 +174,16 @@ export default function ReservationModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Rezerviši sedište</DialogTitle>
+          <DialogTitle>{t('reservation.title')}</DialogTitle>
         </DialogHeader>
 
         {success ? (
           <div className="text-center py-6">
             <div className="text-green-600 text-lg font-medium mb-2">
-              ✅ Rezervacija uspešna!
+              ✅ {t('reservation.success')}
             </div>
             <div className="text-sm text-gray-600">
-              Rezervacija je uspešno kreirana!
+              {t('reservation.successMsg')}
             </div>
           </div>
         ) : (
@@ -191,7 +193,7 @@ export default function ReservationModal({
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium">{trip.company.name}</h3>
                 <div className="text-sm text-gray-600">
-                  {trip.availableSeats} slobodno
+                  {t('reservation.freeSeats', { count: trip.availableSeats })}
                 </div>
               </div>
 
@@ -226,7 +228,7 @@ export default function ReservationModal({
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="fullName">Ime i Prezime</Label>
+                <Label htmlFor="fullName">{t('reservation.fullName')}</Label>
                 <Input
                   id="fullName"
                   type="text"
@@ -234,12 +236,12 @@ export default function ReservationModal({
                   onChange={(e) => setFullName(e.target.value)}
                   required
                   disabled={isPending}
-                  placeholder="Unesite ime i prezime"
+                  placeholder={t('reservation.fullNamePlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('reservation.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -247,12 +249,12 @@ export default function ReservationModal({
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isPending}
-                  placeholder="Unesite email adresu"
+                  placeholder={t('reservation.emailPlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="seats">Broj sedišta</Label>
+                <Label htmlFor="seats">{t('reservation.seats')}</Label>
                 <Input
                   id="seats"
                   type="number"
@@ -264,7 +266,7 @@ export default function ReservationModal({
                   disabled={isPending}
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                  Maksimalno {trip.availableSeats} sedišta dostupno
+                  {t('reservation.maxSeats', { count: trip.availableSeats })}
                 </div>
               </div>
 
@@ -275,10 +277,10 @@ export default function ReservationModal({
                   onClick={handleClose}
                   disabled={isPending}
                 >
-                  Otkaži
+                  {t('reservation.cancelBtn')}
                 </Button>
                 <Button type="submit" disabled={isPending}>
-                  {isPending ? 'Rezervacija...' : 'Rezerviši'}
+                  {isPending ? t('reservation.submitting') : t('reservation.submitBtn')}
                 </Button>
               </div>
             </form>

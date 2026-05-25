@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import RegisterForm from './RegisterForm';
 import LoginForm from './LoginForm';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export default function AuthModal({
   open,
@@ -20,6 +21,7 @@ export default function AuthModal({
   mode: string;
 }) {
   const [mode, setMode] = useState(initialMode);
+  const { t } = useTranslation();
 
   const switchMode = () => {
     setMode(mode === 'login' ? 'register' : 'login');
@@ -36,7 +38,7 @@ export default function AuthModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'login' ? 'Prijavi se' : 'Registruj se'}
+            {mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')}
           </DialogTitle>
         </DialogHeader>
 
@@ -49,19 +51,19 @@ export default function AuthModal({
         <div className="text-sm text-center mt-4">
           {mode === 'login' ? (
             <>
-              Nemaš nalog?
+              {t('auth.noAccount')}{' '}
               <button className="text-blue-600 underline" onClick={switchMode}>
-                Registruj se
+                {t('auth.registerLink')}
               </button>
             </>
           ) : (
             <>
-              Već imaš nalog?
+              {t('auth.hasAccount')}{' '}
               <button
                 className="text-blue-600 underline cursor-pointer"
                 onClick={switchMode}
               >
-                Prijavi se
+                {t('auth.loginLink')}
               </button>
             </>
           )}

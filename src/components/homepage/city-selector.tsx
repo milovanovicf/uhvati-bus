@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 type City = {
   id: number;
@@ -34,6 +35,7 @@ export default function CitySelector({
   setSelectedCity: (city: City) => void;
   excludeCityIds?: number[];
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,21 +75,21 @@ export default function CitySelector({
               title={selectedCity?.name}
               className="overflow-hidden whitespace-nowrap text-ellipsis max-w-[140px] inline-block"
             >
-              {selectedCity?.name || `Izaberi grad`}
+              {selectedCity?.name || t('citySelector.placeholder')}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="p-0 max-h-60 overflow-y-auto">
           <Command>
-            <CommandInput placeholder="Pretraži grad..." />
+            <CommandInput placeholder={t('citySelector.search')} />
 
             {loading ? (
               <div className="p-4 text-sm text-muted-foreground">
-                Učitavanje gradova...
+                {t('citySelector.loading')}
               </div>
             ) : cities.length === 0 ? (
-              <CommandEmpty>Grad nije pronađen.</CommandEmpty>
+              <CommandEmpty>{t('citySelector.notFound')}</CommandEmpty>
             ) : (
               <CommandGroup>
                 {filteredCities.map((city) => (

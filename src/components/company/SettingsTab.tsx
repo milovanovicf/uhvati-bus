@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Company } from '@/generated/prisma';
 import { updateCompanySettings } from '@/app/actions';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export default function SettingsTab({
   company,
@@ -15,6 +16,7 @@ export default function SettingsTab({
   isPending: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
+  const { t } = useTranslation();
 
   const [name, setName] = useState(company.name);
   const [email, setEmail] = useState(company.email);
@@ -43,7 +45,7 @@ export default function SettingsTab({
         setNewPassword('');
         setConfirmPassword('');
       } catch (err: any) {
-        setError(err.message || 'Greška pri čuvanju podešavanja.');
+        setError(err.message || t('dashboard.settingsError'));
       }
     });
   };
@@ -59,15 +61,15 @@ export default function SettingsTab({
       )}
       {success && (
         <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded text-sm">
-          Podešavanja su uspešno sačuvana.
+          {t('dashboard.settingsSaved')}
         </div>
       )}
 
       <div>
-        <h3 className="text-lg font-semibold mb-4">Profil kompanije</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('dashboard.profileTitle')}</h3>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="settings-name">Naziv kompanije</Label>
+            <Label htmlFor="settings-name">{t('dashboard.companyName')}</Label>
             <Input
               id="settings-name"
               type="text"
@@ -77,7 +79,7 @@ export default function SettingsTab({
             />
           </div>
           <div>
-            <Label htmlFor="settings-email">Email adresa</Label>
+            <Label htmlFor="settings-email">{t('dashboard.emailAddress')}</Label>
             <Input
               id="settings-email"
               type="email"
@@ -92,42 +94,40 @@ export default function SettingsTab({
       <hr />
 
       <div>
-        <h3 className="text-lg font-semibold mb-1">Promena lozinke</h3>
-        <p className="text-sm text-gray-500 mb-4">
-          Ostavite prazno ako ne želite da promenite lozinku.
-        </p>
+        <h3 className="text-lg font-semibold mb-1">{t('dashboard.changePassword')}</h3>
+        <p className="text-sm text-gray-500 mb-4">{t('dashboard.changePasswordHint')}</p>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="current-password">Trenutna lozinka</Label>
+            <Label htmlFor="current-password">{t('dashboard.currentPassword')}</Label>
             <Input
               id="current-password"
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               disabled={disabled}
-              placeholder="Unesite trenutnu lozinku"
+              placeholder={t('dashboard.currentPasswordPlaceholder')}
             />
           </div>
           <div>
-            <Label htmlFor="new-password">Nova lozinka</Label>
+            <Label htmlFor="new-password">{t('dashboard.newPassword')}</Label>
             <Input
               id="new-password"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={disabled}
-              placeholder="Najmanje 8 karaktera"
+              placeholder={t('dashboard.newPasswordPlaceholder')}
             />
           </div>
           <div>
-            <Label htmlFor="confirm-password">Potvrdi novu lozinku</Label>
+            <Label htmlFor="confirm-password">{t('dashboard.confirmPassword')}</Label>
             <Input
               id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               disabled={disabled}
-              placeholder="Ponovite novu lozinku"
+              placeholder={t('dashboard.confirmPasswordPlaceholder')}
             />
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function SettingsTab({
         onClick={handleSave}
         disabled={disabled || !name || !email}
       >
-        {isPending ? 'Čuvanje...' : 'Sačuvaj'}
+        {isPending ? t('dashboard.saving') : t('dashboard.save')}
       </Button>
     </div>
   );

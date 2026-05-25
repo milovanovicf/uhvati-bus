@@ -9,13 +9,14 @@ import CitySelector from '@/components/homepage/city-selector';
 import { City } from '@/generated/prisma';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { srLatn } from 'date-fns/locale';
+import { srLatn, enUS } from 'date-fns/locale';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 const { DateTime } = require('luxon');
 
@@ -31,6 +32,9 @@ interface Props {
 }
 
 export default function TripModal({ isOpen, onClose }: Props) {
+  const { language, t } = useTranslation();
+  const locale = language === 'en' ? enUS : srLatn;
+
   const [fromCity, setFromCity] = useState<City | null>(null);
   const [toCity, setToCity] = useState<City | null>(null);
   const [seatsTotal, setSeatsTotal] = useState(50);
@@ -56,7 +60,6 @@ export default function TripModal({ isOpen, onClose }: Props) {
       .toFormat('HH:mm');
   }
 
-  // Fetch saved route duration when both cities are selected
   useEffect(() => {
     if (!fromCity || !toCity) return;
     let cancelled = false;
@@ -84,7 +87,6 @@ export default function TripModal({ isOpen, onClose }: Props) {
     };
   }, [fromCity, toCity]);
 
-  // When duration changes, recalculate all arrival times
   useEffect(() => {
     if (totalDurationMins <= 0) return;
     setTimeSlots((prev) =>
@@ -155,19 +157,19 @@ export default function TripModal({ isOpen, onClose }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!fromCity || !toCity) {
-      setError('Izaberite polaznu i odredišnu stanicu.');
+      setError(t('tripModal.validationCities'));
       return;
     }
     if (fromCity.id === toCity.id) {
-      setError('Polazni i odredišni grad ne mogu biti isti.');
+      setError(t('tripModal.validationSameCity'));
       return;
     }
     if (!startDate || !endDate) {
-      setError('Izaberite početni i krajnji datum.');
+      setError(t('tripModal.validationDates'));
       return;
     }
     if (endDate < startDate) {
-      setError('Krajnji datum mora biti posle početnog.');
+      setError(t('tripModal.validationEndDate'));
       return;
     }
 
@@ -194,9 +196,7 @@ export default function TripModal({ isOpen, onClose }: Props) {
         setResult(res);
       } catch (err: unknown) {
         setError(
-          err instanceof Error
-            ? err.message
-            : 'Greška pri kreiranju putovanja.',
+          err instanceof Error ? err.message : t('tripModal.errorCreating'),
         );
       }
     });
@@ -226,7 +226,7 @@ export default function TripModal({ isOpen, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-5">Dodaj putovanje</h3>
+        <h3 className="text-lg font-semibold mb-5">{t('tripModal.title')}</h3>
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
@@ -235,22 +235,21 @@ export default function TripModal({ isOpen, onClose }: Props) {
         )}
         {result && (
           <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded text-sm">
-            Uspešno kreirano <strong>{result.created}</strong> putovanja.
-            {result.created === 0 &&
-              ' Sva putovanja za ovaj period već postoje.'}
+            {t('tripModal.successCreated', { count: result.created })}
+            {result.created === 0 && ` ${t('tripModal.allExist')}`}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Ruta i sedišta</CardTitle>
+              <CardTitle className="text-base">{t('tripModal.routeAndSeats')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
               <div className="col-span-2 flex items-end gap-2">
                 <div className="flex-1">
                   <CitySelector
-                    label="Polazak iz"
+                    label={t('tripModal.departureFrom')}
                     selectedCity={fromCity}
                     setSelectedCity={setFromCity}
                   />
@@ -259,15 +258,15 @@ export default function TripModal({ isOpen, onClose }: Props) {
                   type="button"
                   size="icon"
                   variant="outline"
-                  onClick={() => { const t = fromCity; setFromCity(toCity); setToCity(t); }}
+                  onClick={() => { const tmp = fromCity; setFromCity(toCity); setToCity(tmp); }}
                   className="flex-none mb-0.5"
-                  title="Zameni gradove"
+                  title={t('booking.swapCities')}
                 >
                   <ArrowLeftRight className="h-4 w-4" />
                 </Button>
                 <div className="flex-1">
                   <CitySelector
-                    label="Dolazak u"
+                    label={t('tripModal.arrivalTo')}
                     selectedCity={toCity}
                     setSelectedCity={setToCity}
                   />
@@ -275,8 +274,8 @@ export default function TripModal({ isOpen, onClose }: Props) {
               </div>
               <div>
                 <Label>
-                  Trajanje vožnje{' '}
-                  <span className="text-gray-400 font-normal">(opciono)</span>
+                  {t('tripModal.driveDuration')}{' '}
+                  <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
                 </Label>
                 <div className="flex items-center gap-1 mt-1 border rounded-md px-2 py-1 bg-white w-fit">
                   <input
@@ -309,8 +308,8 @@ export default function TripModal({ isOpen, onClose }: Props) {
               </div>
               <div>
                 <Label>
-                  Distanca{' '}
-                  <span className="text-gray-400 font-normal">(opciono)</span>
+                  {t('tripModal.distance')}{' '}
+                  <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
                 </Label>
                 <div className="flex items-center gap-2 mt-1">
                   <Input
@@ -327,7 +326,7 @@ export default function TripModal({ isOpen, onClose }: Props) {
                 </div>
               </div>
               <div className="col-span-2">
-                <Label>Broj sedišta po putovanju</Label>
+                <Label>{t('tripModal.seatsPerTrip')}</Label>
                 <Input
                   type="number"
                   value={seatsTotal}
@@ -342,12 +341,12 @@ export default function TripModal({ isOpen, onClose }: Props) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Period i raspored</CardTitle>
+              <CardTitle className="text-base">{t('tripModal.periodAndSchedule')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Od datuma</Label>
+                  <Label>{t('tripModal.fromDate')}</Label>
                   <Popover open={openStart} onOpenChange={setOpenStart}>
                     <PopoverTrigger asChild>
                       <Button
@@ -356,8 +355,8 @@ export default function TripModal({ isOpen, onClose }: Props) {
                         className="justify-between font-normal border p-2 rounded w-full"
                       >
                         {startDate
-                          ? format(startDate, 'PPP', { locale: srLatn })
-                          : 'Izaberi datum'}
+                          ? format(startDate, 'PPP', { locale })
+                          : t('tripModal.selectDate')}
                         <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -370,13 +369,13 @@ export default function TripModal({ isOpen, onClose }: Props) {
                           setOpenStart(false);
                         }}
                         captionLayout="dropdown"
-                        locale={srLatn}
+                        locale={locale}
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
                 <div>
-                  <Label>Do datuma</Label>
+                  <Label>{t('tripModal.toDate')}</Label>
                   <Popover open={openEnd} onOpenChange={setOpenEnd}>
                     <PopoverTrigger asChild>
                       <Button
@@ -385,8 +384,8 @@ export default function TripModal({ isOpen, onClose }: Props) {
                         className="justify-between font-normal border p-2 rounded w-full"
                       >
                         {endDate
-                          ? format(endDate, 'PPP', { locale: srLatn })
-                          : 'Izaberi datum'}
+                          ? format(endDate, 'PPP', { locale })
+                          : t('tripModal.selectDate')}
                         <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -399,7 +398,7 @@ export default function TripModal({ isOpen, onClose }: Props) {
                           setOpenEnd(false);
                         }}
                         captionLayout="dropdown"
-                        locale={srLatn}
+                        locale={locale}
                         disabled={(d) => (startDate ? d < startDate : false)}
                       />
                     </PopoverContent>
@@ -412,9 +411,9 @@ export default function TripModal({ isOpen, onClose }: Props) {
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle className="text-base">Vremena polazaka</CardTitle>
+                <CardTitle className="text-base">{t('tripModal.departureTimes')}</CardTitle>
                 <Button type="button" onClick={addTimeSlot} size="sm">
-                  <Plus className="h-4 w-4 mr-1" /> Dodaj vreme
+                  <Plus className="h-4 w-4 mr-1" /> {t('tripModal.addTime')}
                 </Button>
               </div>
             </CardHeader>
@@ -429,22 +428,18 @@ export default function TripModal({ isOpen, onClose }: Props) {
                   </span>
                   <div className="flex-1 grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs">Polazak</Label>
+                      <Label className="text-xs">{t('dashboard.departure')}</Label>
                       <Input
                         type="time"
                         value={slot.departureTime}
                         onChange={(e) =>
-                          updateTimeSlot(
-                            slot.id,
-                            'departureTime',
-                            e.target.value,
-                          )
+                          updateTimeSlot(slot.id, 'departureTime', e.target.value)
                         }
                       />
                     </div>
                     <div>
                       <Label className="text-xs">
-                        Dolazak
+                        {t('dashboard.arrival')}
                         {totalDurationMins > 0 && (
                           <span className="text-blue-500 ml-1">(auto)</span>
                         )}
@@ -484,15 +479,17 @@ export default function TripModal({ isOpen, onClose }: Props) {
             <div className="text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-lg p-3">
               {isSingleDay ? (
                 <>
-                  Kreiraće se <strong>{tripCount}</strong>{' '}
-                  {tripCount === 1 ? 'putovanje' : 'putovanja'} za{' '}
+                  {t('tripModal.willCreatePrefix')} <strong>{tripCount}</strong>{' '}
+                  {tripCount === 1 ? t('tripModal.tripSingular') : t('tripModal.tripPlural')}{' '}
+                  {t('tripModal.forDate')}{' '}
                   <strong>
-                    {format(startDate!, 'd. MMMM yyyy.', { locale: srLatn })}
+                    {format(startDate!, 'd. MMMM yyyy.', { locale })}
                   </strong>
                 </>
               ) : (
                 <>
-                  Generisaće se <strong>{tripCount}</strong> putovanja{' '}
+                  {t('tripModal.willGeneratePrefix')} <strong>{tripCount}</strong>{' '}
+                  {t('tripModal.tripPlural')}{' '}
                   <span className="text-blue-600">
                     ({format(startDate!, 'd.M.yyyy')} –{' '}
                     {format(endDate!, 'd.M.yyyy')})
@@ -509,13 +506,13 @@ export default function TripModal({ isOpen, onClose }: Props) {
               onClick={handleClose}
               disabled={isPending}
             >
-              {result ? 'Zatvori' : 'Otkaži'}
+              {result ? t('tripModal.close') : t('tripModal.cancel')}
             </Button>
             {!result && (
               <Button type="submit" disabled={isPending || tripCount === 0}>
                 {isPending
-                  ? 'Kreiranje...'
-                  : `Kreiraj${tripCount > 0 ? ` ${tripCount}` : ''} putovanja`}
+                  ? t('tripModal.creating')
+                  : t('tripModal.createTrips', { count: tripCount > 0 ? tripCount : '' })}
               </Button>
             )}
           </div>

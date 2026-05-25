@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCompanyTrips, getCurrentCompany } from '../actions';
 import CompanyClient from '@/components/company/CompanyClient';
-import LogoutButton from '@/components/LogoutButton';
 import { LogIn, AlertCircle } from 'lucide-react';
 
 export default async function CompanyDashboard() {
@@ -18,11 +17,6 @@ export default async function CompanyDashboard() {
 
     return (
       <div className="min-h-screen p-6 bg-slate-50">
-        <header className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Dobrodošli, {company?.name}</h2>
-          <LogoutButton />
-        </header>
-
         <CompanyClient
           company={company}
           initialTrips={trips}

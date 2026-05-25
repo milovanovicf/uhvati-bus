@@ -4,12 +4,13 @@ import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Trash2, MapPin, Pencil } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, isToday } from 'date-fns';
-import { srLatn } from 'date-fns/locale';
+import { srLatn, enUS } from 'date-fns/locale';
 import { deleteRoute } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 import { TripWithDetails } from './CompanyClient';
 import EditRouteModal, { RouteGroup } from './EditRouteModal';
 import TripReservationsModal from './TripReservationsModal';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 const PX_PER_HOUR = 64;
 
@@ -37,6 +38,8 @@ interface TripsTabProps {
 
 export default function TripsTab({ trips, isPending }: TripsTabProps) {
   const router = useRouter();
+  const { language, t } = useTranslation();
+  const dateFnsLocale = language === 'sr' ? srLatn : enUS;
   const [weekStart, setWeekStart] = useState(() =>
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
@@ -152,7 +155,7 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
   function handleDeleteRoute(route: RouteInfo) {
     if (
       !confirm(
-        `Da li ste sigurni da želite da obrišete rutu "${route.fromCity} → ${route.toCity}"?\nSva putovanja i rezervacije će biti trajno obrisana.`
+        t('dashboard.deleteRouteConfirm', { from: route.fromCity, to: route.toCity })
       )
     )
       return;
@@ -162,7 +165,9 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
         router.refresh();
       } catch (err) {
         alert(
-          'Greška: ' + (err instanceof Error ? err.message : 'Nepoznata greška')
+          t('dashboard.deleteError', {
+            message: err instanceof Error ? err.message : t('dashboard.unknownError'),
+          })
         );
       }
     });
@@ -172,7 +177,7 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-        <span className="ml-2">Učitavanje putovanja...</span>
+        <span className="ml-2">{t('dashboard.loadingTrips')}</span>
       </div>
     );
   }
@@ -180,10 +185,8 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
   if (trips.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500 mb-2">Nemate kreirana putovanja</p>
-        <p className="text-sm text-gray-400">
-          Kliknite na "Novo putovanje" ili "Serija putovanja" da počnete.
-        </p>
+        <p className="text-gray-500 mb-2">{t('dashboard.noTrips')}</p>
+        <p className="text-sm text-gray-400">{t('dashboard.noTripsHint')}</p>
       </div>
     );
   }
@@ -210,7 +213,7 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                   {route.fromCity} → {route.toCity}
                 </span>
                 <span className="text-xs opacity-70" style={{ color: c.text }}>
-                  {route.trips.length} putovanja
+                  {route.trips.length} {t('dashboard.trips')}
                 </span>
               </div>
               <div className="flex items-center gap-1">
@@ -254,8 +257,8 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm font-medium min-w-[180px] text-center">
-            {format(weekStart, 'd. MMM', { locale: srLatn })} –{' '}
-            {format(addDays(weekStart, 6), 'd. MMM yyyy.', { locale: srLatn })}
+            {format(weekStart, 'd. MMM', { locale: dateFnsLocale })} –{' '}
+            {format(addDays(weekStart, 6), 'd. MMM yyyy.', { locale: dateFnsLocale })}
           </span>
           <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setWeekStart((d) => addDays(d, 7))}>
             <ChevronRight className="h-4 w-4" />
@@ -267,7 +270,7 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
           className="h-8 text-xs"
           onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
         >
-          Danas
+          {t('dashboard.today')}
         </Button>
       </div>
 
@@ -287,7 +290,7 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                 }`}
               >
                 <div className={`text-xs ${today ? 'text-blue-500' : 'text-gray-400'}`}>
-                  {format(day, 'EEE', { locale: srLatn })}
+                  {format(day, 'EEE', { locale: dateFnsLocale })}
                 </div>
                 <div
                   className={`text-sm font-bold ${
