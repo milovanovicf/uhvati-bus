@@ -133,6 +133,18 @@
     "minSeatsError": "You must book at least 1 seat",
     "error": "Error creating reservation"
   },
+  "myReservation": {
+    "seats": "Seats",
+    "cancelBtn": "Cancel reservation",
+    "cancelling": "Cancelling...",
+    "cancelledTitle": "Reservation cancelled",
+    "cancelledMsg": "Your reservation has been successfully cancelled.",
+    "invalidTitle": "Invalid link",
+    "invalidMsg": "This link is not valid or has expired.",
+    "notFoundMsg": "Reservation not found. It may have already been cancelled.",
+    "alreadyDeparted": "The trip has already departed — the reservation cannot be cancelled.",
+    "cancelError": "An error occurred. Please try again."
+  },
   "aboutUs": {
     "heroTitle": "About us",
     "heroSubtitle": "UhvatBus is a platform that connects passengers with bus carriers, making ticket booking fast, simple, and reliable.",
@@ -264,6 +276,7 @@
     "tripSingular": "trip",
     "tripPlural": "trips",
     "newSlot": "(new)",
+    "pastSlot": "(past)",
     "departureTime": "Departure time",
     "arrivalTime": "Arrival time",
     "duration": "Duration",
@@ -293,7 +306,9 @@
     "noTrips": "You have no trips",
     "noTripsHint": "Click the button above to get started.",
     "trips": "trips",
+    "tripTooltip": "{from} → {to}\n{dep} – {arr}\nSeats: {available}/{total}",
     "today": "Today",
+    "completed": "Over",
     "deleteRouteConfirm": "Are you sure you want to delete the route \"{from} → {to}\"?\nAll trips and bookings will be permanently deleted.",
     "deleteError": "Error: {message}",
     "unknownError": "Unknown error",

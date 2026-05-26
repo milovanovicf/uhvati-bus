@@ -133,6 +133,18 @@
     "minSeatsError": "Morate rezervisati bar 1 sedište",
     "error": "Greška pri kreiranju rezervacije"
   },
+  "myReservation": {
+    "seats": "Sedišta",
+    "cancelBtn": "Otkaži rezervaciju",
+    "cancelling": "Otkazivanje...",
+    "cancelledTitle": "Rezervacija otkazana",
+    "cancelledMsg": "Tvoja rezervacija je uspešno otkazana.",
+    "invalidTitle": "Nevažeći link",
+    "invalidMsg": "Ovaj link nije validan ili je istekao.",
+    "notFoundMsg": "Rezervacija nije pronađena. Možda je već otkazana.",
+    "alreadyDeparted": "Putovanje je već krenulo — rezervacija se ne može otkazati.",
+    "cancelError": "Došlo je do greške. Pokušajte ponovo."
+  },
   "aboutUs": {
     "heroTitle": "O nama",
     "heroSubtitle": "UhvatBus je platforma koja povezuje putnike sa autobuskim prevoznicima, čineći rezervaciju karata brzom, jednostavnom i pouzdanom.",
@@ -264,6 +276,7 @@
     "tripSingular": "putovanje",
     "tripPlural": "putovanja",
     "newSlot": "(novo)",
+    "pastSlot": "(prošlo)",
     "departureTime": "Vreme polaska",
     "arrivalTime": "Vreme dolaska",
     "duration": "Trajanje",
@@ -293,7 +306,9 @@
     "noTrips": "Nemate kreirana putovanja",
     "noTripsHint": "Kliknite na dugme iznad da počnete.",
     "trips": "putovanja",
+    "tripTooltip": "{from} → {to}\n{dep} – {arr}\nSedišta: {available}/{total}",
     "today": "Danas",
+    "completed": "Završeno",
     "deleteRouteConfirm": "Da li ste sigurni da želite da obrišete rutu \"{from} → {to}\"?\nSva putovanja i rezervacije će biti trajno obrisana.",
     "deleteError": "Greška: {message}",
     "unknownError": "Nepoznata greška",

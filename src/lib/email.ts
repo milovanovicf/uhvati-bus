@@ -13,6 +13,7 @@ interface BookingEmailData {
   arrival: Date;
   companyName: string;
   seats: number[];
+  viewCancelUrl: string;
 }
 
 function formatDateTime(date: Date) {
@@ -36,6 +37,7 @@ function buildHtml(data: BookingEmailData): string {
     arrival,
     companyName,
     seats,
+    viewCancelUrl,
   } = data;
 
   return `<!DOCTYPE html>
@@ -109,6 +111,27 @@ function buildHtml(data: BookingEmailData): string {
                   <td style="padding:16px 20px;">
                     <p style="margin:0;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Sedišta (${seats.length})</p>
                     <p style="margin:4px 0 0;font-size:15px;color:#111827;font-weight:600;">${seats.join(', ')}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- View / Cancel button -->
+          <tr>
+            <td style="padding:0 32px 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${viewCancelUrl}"
+                       style="display:inline-block;background:#1d4ed8;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:6px;font-size:15px;font-weight:600;">
+                      Otkaži rezervaciju →
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:10px;" align="center">
+                    <p style="margin:0;font-size:12px;color:#9ca3af;">Link važi 365 dana.</p>
                   </td>
                 </tr>
               </table>
