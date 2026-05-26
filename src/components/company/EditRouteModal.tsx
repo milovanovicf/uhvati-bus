@@ -409,10 +409,11 @@ export default function EditRouteModal({
 
                 <div className="space-y-3">
                   {timeSlots.map((slot, index) => {
+                    const slotIsPast = slot.dateTo !== null && slot.dateTo < new Date();
                     return (
                       <div
                         key={slot.id}
-                        className="p-4 border rounded-lg bg-gray-50"
+                        className={`p-4 border rounded-lg ${slotIsPast ? 'bg-gray-100 opacity-60' : 'bg-gray-50'}`}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2 text-sm font-medium">
@@ -420,16 +421,19 @@ export default function EditRouteModal({
                             <span className="text-gray-600">
                               {t('editRoute.departureN', { n: String(index + 1) })}
                             </span>
-                            {slot.tripIds.length > 0 && (
+                            {slot.tripIds.length > 0 && !slotIsPast && (
                               <span className="text-xs text-blue-500 font-normal">
                                 ({slot.tripIds.length} {slot.tripIds.length === 1 ? t('editRoute.tripSingular') : t('editRoute.tripPlural')})
                               </span>
                             )}
-                            {slot.tripIds.length === 0 && (
+                            {slotIsPast && (
+                              <span className="text-xs text-gray-400 font-normal">{t('editRoute.pastSlot')}</span>
+                            )}
+                            {slot.tripIds.length === 0 && !slotIsPast && (
                               <span className="text-xs text-green-600 font-normal">{t('editRoute.newSlot')}</span>
                             )}
                           </div>
-                          {timeSlots.length > 1 && (
+                          {timeSlots.length > 1 && !slotIsPast && (
                             <Button
                               type="button"
                               variant="ghost"
@@ -458,7 +462,7 @@ export default function EditRouteModal({
                               value={slot.departureTime}
                               onChange={(e) => updateTimeSlot(slot.id, 'departureTime', e.target.value)}
                               className="text-sm w-full"
-                              disabled={isPending}
+                              disabled={isPending || slotIsPast}
                             />
                           </div>
                           <div>
@@ -468,7 +472,7 @@ export default function EditRouteModal({
                               value={slot.arrivalTime}
                               onChange={(e) => updateTimeSlot(slot.id, 'arrivalTime', e.target.value)}
                               className="text-sm w-full"
-                              disabled={isPending}
+                              disabled={isPending || slotIsPast}
                             />
                           </div>
                           <div>

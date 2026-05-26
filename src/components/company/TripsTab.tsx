@@ -2,7 +2,13 @@
 
 import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Trash2, MapPin, Pencil } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  MapPin,
+  Pencil,
+} from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, isToday } from 'date-fns';
 import { srLatn, enUS } from 'date-fns/locale';
 import { deleteRoute } from '@/app/actions';
@@ -41,10 +47,12 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
   const { language, t } = useTranslation();
   const dateFnsLocale = language === 'sr' ? srLatn : enUS;
   const [weekStart, setWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
   );
   const [editingRoute, setEditingRoute] = useState<RouteGroup | null>(null);
-  const [selectedTrip, setSelectedTrip] = useState<TripWithDetails | null>(null);
+  const [selectedTrip, setSelectedTrip] = useState<TripWithDetails | null>(
+    null,
+  );
   const [deletePending, startDeleteTransition] = useTransition();
 
   // Sync selectedTrip with latest data after router.refresh()
@@ -78,12 +86,21 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
     return d >= weekStart && d < addDays(weekStart, 7);
   });
   const hourStart = weekTrips.length
-    ? Math.max(0, Math.min(...weekTrips.map((t) => new Date(t.departure).getHours())) - 1)
+    ? Math.max(
+        0,
+        Math.min(...weekTrips.map((t) => new Date(t.departure).getHours())) - 1,
+      )
     : 6;
   const hourEnd = weekTrips.length
-    ? Math.min(25, Math.max(...weekTrips.map((t) => new Date(t.arrival).getHours())) + 1)
+    ? Math.min(
+        25,
+        Math.max(...weekTrips.map((t) => new Date(t.arrival).getHours())) + 1,
+      )
     : 22;
-  const hours = Array.from({ length: hourEnd - hourStart }, (_, i) => hourStart + i);
+  const hours = Array.from(
+    { length: hourEnd - hourStart },
+    (_, i) => hourStart + i,
+  );
   const totalHeight = hours.length * PX_PER_HOUR;
 
   function getTop(trip: TripWithDetails) {
@@ -104,7 +121,7 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
     return routes.flatMap((r) =>
       r.trips
         .filter((t) => isSameDay(new Date(t.departure), day))
-        .map((t) => ({ trip: t, color: PALETTE[r.colorIdx], route: r }))
+        .map((t) => ({ trip: t, color: PALETTE[r.colorIdx], route: r })),
     );
   }
 
@@ -113,7 +130,9 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
   function layoutDayTrips(items: DayItem[]) {
     if (items.length === 0) return [];
     const sorted = [...items].sort(
-      (a, b) => new Date(a.trip.departure).getTime() - new Date(b.trip.departure).getTime()
+      (a, b) =>
+        new Date(a.trip.departure).getTime() -
+        new Date(b.trip.departure).getTime(),
     );
 
     // Group into clusters of overlapping trips
@@ -147,7 +166,9 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
         cols.push(col);
       }
       const numCols = colEnd.length;
-      cluster.forEach((item, i) => result.push({ ...item, col: cols[i], numCols }));
+      cluster.forEach((item, i) =>
+        result.push({ ...item, col: cols[i], numCols }),
+      );
     }
     return result;
   }
@@ -155,7 +176,10 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
   function handleDeleteRoute(route: RouteInfo) {
     if (
       !confirm(
-        t('dashboard.deleteRouteConfirm', { from: route.fromCity, to: route.toCity })
+        t('dashboard.deleteRouteConfirm', {
+          from: route.fromCity,
+          to: route.toCity,
+        }),
       )
     )
       return;
@@ -166,8 +190,9 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
       } catch (err) {
         alert(
           t('dashboard.deleteError', {
-            message: err instanceof Error ? err.message : t('dashboard.unknownError'),
-          })
+            message:
+              err instanceof Error ? err.message : t('dashboard.unknownError'),
+          }),
         );
       }
     });
@@ -197,6 +222,9 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
       <div className="space-y-1.5">
         {routes.map((route) => {
           const c = PALETTE[route.colorIdx];
+          const allPast = route.trips.every(
+            (t) => new Date(t.departure) < new Date(),
+          );
           return (
             <div
               key={route.routeId}
@@ -208,7 +236,10 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                   className="inline-block w-2.5 h-2.5 rounded-full flex-none"
                   style={{ backgroundColor: c.bar }}
                 />
-                <MapPin className="h-3.5 w-3.5 flex-none" style={{ color: c.bar }} />
+                <MapPin
+                  className="h-3.5 w-3.5 flex-none"
+                  style={{ color: c.bar }}
+                />
                 <span className="font-medium" style={{ color: c.text }}>
                   {route.fromCity} → {route.toCity}
                 </span>
@@ -221,15 +252,27 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                   variant="outline"
                   size="sm"
                   className="h-7 w-7 p-0 flex-none"
-                  onClick={() => setEditingRoute({
-                    routeId: route.routeId,
-                    fromCity: route.fromCity,
-                    toCity: route.toCity,
-                    trips: route.trips,
-                    totalSeats: route.trips.reduce((s, t) => s + t.seatsTotal, 0),
-                    availableSeats: route.trips.reduce((s, t) => s + (t.seatsAvailable ?? t.seatsTotal), 0),
-                    totalReservations: route.trips.reduce((s, t) => s + t.reservations.length, 0),
-                  })}
+                  disabled={allPast}
+                  onClick={() =>
+                    setEditingRoute({
+                      routeId: route.routeId,
+                      fromCity: route.fromCity,
+                      toCity: route.toCity,
+                      trips: route.trips,
+                      totalSeats: route.trips.reduce(
+                        (s, t) => s + t.seatsTotal,
+                        0,
+                      ),
+                      availableSeats: route.trips.reduce(
+                        (s, t) => s + (t.seatsAvailable ?? t.seatsTotal),
+                        0,
+                      ),
+                      totalReservations: route.trips.reduce(
+                        (s, t) => s + t.reservations.length,
+                        0,
+                      ),
+                    })
+                  }
                   title={`Uredi rutu ${route.fromCity} → ${route.toCity}`}
                 >
                   <Pencil className="h-3 w-3" />
@@ -253,14 +296,26 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
       {/* Week navigation */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setWeekStart((d) => addDays(d, -7))}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setWeekStart((d) => addDays(d, -7))}
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm font-medium min-w-[180px] text-center">
             {format(weekStart, 'd. MMM', { locale: dateFnsLocale })} –{' '}
-            {format(addDays(weekStart, 6), 'd. MMM yyyy.', { locale: dateFnsLocale })}
+            {format(addDays(weekStart, 6), 'd. MMM yyyy.', {
+              locale: dateFnsLocale,
+            })}
           </span>
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setWeekStart((d) => addDays(d, 7))}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setWeekStart((d) => addDays(d, 7))}
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -268,7 +323,9 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
           variant="outline"
           size="sm"
           className="h-8 text-xs"
-          onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+          onClick={() =>
+            setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))
+          }
         >
           {t('dashboard.today')}
         </Button>
@@ -277,11 +334,16 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
       {/* Timetable */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         {/* Day header */}
-        <div className="flex border-b border-gray-200 bg-gray-50" style={{ minWidth: 520 }}>
+        <div
+          className="flex border-b border-gray-200 bg-gray-50"
+          style={{ minWidth: 520 }}
+        >
           <div className="flex-none w-12 border-r border-gray-200" />
           {weekDays.map((day) => {
             const today = isToday(day);
-            const hasTrips = weekTrips.some((t) => isSameDay(new Date(t.departure), day));
+            const hasTrips = weekTrips.some((t) =>
+              isSameDay(new Date(t.departure), day),
+            );
             return (
               <div
                 key={day.toISOString()}
@@ -289,7 +351,9 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                   today ? 'bg-blue-50' : ''
                 }`}
               >
-                <div className={`text-xs ${today ? 'text-blue-500' : 'text-gray-400'}`}>
+                <div
+                  className={`text-xs ${today ? 'text-blue-500' : 'text-gray-400'}`}
+                >
                   {format(day, 'EEE', { locale: dateFnsLocale })}
                 </div>
                 <div
@@ -297,8 +361,8 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                     today
                       ? 'text-white bg-blue-500 rounded-full w-7 h-7 flex items-center justify-center mx-auto'
                       : hasTrips
-                      ? 'text-gray-800'
-                      : 'text-gray-400'
+                        ? 'text-gray-800'
+                        : 'text-gray-400'
                   }`}
                 >
                   {format(day, 'd')}
@@ -310,7 +374,10 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
 
         {/* Scrollable grid */}
         <div className="overflow-y-auto" style={{ maxHeight: 520 }}>
-          <div className="flex relative" style={{ minWidth: 520, height: totalHeight }}>
+          <div
+            className="flex relative"
+            style={{ minWidth: 520, height: totalHeight }}
+          >
             {/* Time gutter */}
             <div className="flex-none w-12 border-r border-gray-200 relative bg-white">
               {hours.map((h) => (
@@ -348,59 +415,86 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
                   ))}
 
                   {/* Trip blocks */}
-                  {layoutDayTrips(dayItems).map(({ trip, color, route, col, numCols }) => {
-                    const top = getTop(trip);
-                    const height = getHeight(trip);
-                    const dep = format(new Date(trip.departure), 'HH:mm');
-                    const arr = format(new Date(trip.arrival), 'HH:mm');
-                    const w = 100 / numCols;
-                    const l = col * w;
+                  {layoutDayTrips(dayItems).map(
+                    ({ trip, color, route, col, numCols }) => {
+                      const top = getTop(trip);
+                      const height = getHeight(trip);
+                      const dep = format(new Date(trip.departure), 'HH:mm');
+                      const arr = format(new Date(trip.arrival), 'HH:mm');
+                      const w = 100 / numCols;
+                      const l = col * w;
+                      const isPast = new Date(trip.departure) < new Date();
 
-                    return (
-                      <div
-                        key={trip.id}
-                        className="absolute rounded overflow-hidden select-none cursor-pointer hover:brightness-95 transition-[filter]"
-                        onClick={() => setSelectedTrip(trip)}
-                        style={{
-                          top: top + 1,
-                          height: height - 2,
-                          left: `calc(${l}% + 2px)`,
-                          width: `calc(${w}% - 4px)`,
-                          backgroundColor: color.bg,
-                          borderLeft: `3px solid ${color.bar}`,
-                          border: `1px solid ${color.border}`,
-                          borderLeftWidth: 3,
-                          borderLeftColor: color.bar,
-                        }}
-                        title={`${route.fromCity} → ${route.toCity}\n${dep} – ${arr}\nSedišta: ${trip.seatsAvailable ?? trip.seatsTotal}/${trip.seatsTotal}`}
-                      >
-                        <div className="px-1.5 pt-0.5">
-                          <div
-                            className="text-[11px] font-bold leading-tight truncate"
-                            style={{ color: color.text }}
-                          >
-                            {dep}–{arr}
+                      return (
+                        <div
+                          key={trip.id}
+                          className={`absolute rounded overflow-hidden select-none transition-[filter] ${
+                            isPast
+                              ? 'opacity-40 cursor-default'
+                              : 'cursor-pointer hover:brightness-95'
+                          }`}
+                          onClick={
+                            isPast ? undefined : () => setSelectedTrip(trip)
+                          }
+                          style={{
+                            top: top + 1,
+                            height: height - 2,
+                            left: `calc(${l}% + 2px)`,
+                            width: `calc(${w}% - 4px)`,
+                            backgroundColor: color.bg,
+                            borderLeft: `3px solid ${color.bar}`,
+                            border: `1px solid ${color.border}`,
+                            borderLeftWidth: 3,
+                            borderLeftColor: color.bar,
+                          }}
+                          title={t('dashboard.tripTooltip', {
+                            from: route.fromCity,
+                            to: route.toCity,
+                            dep,
+                            arr,
+                            available: String(
+                              trip.seatsAvailable ?? trip.seatsTotal,
+                            ),
+                            total: String(trip.seatsTotal),
+                          })}
+                        >
+                          <div className="px-1.5 pt-0.5">
+                            <div
+                              className="text-[11px] font-bold leading-tight truncate"
+                              style={{ color: color.text }}
+                            >
+                              {dep}–{arr}
+                            </div>
+                            {isPast && (
+                              <div
+                                className="text-[10px] font-medium leading-tight"
+                                style={{ color: color.text }}
+                              >
+                                {t('dashboard.completed')}
+                              </div>
+                            )}
+                            {!isPast && height >= 46 && (
+                              <div
+                                className="text-[10px] leading-tight truncate"
+                                style={{ color: color.bar }}
+                              >
+                                {route.fromCity} → {route.toCity}
+                              </div>
+                            )}
+                            {!isPast && height >= 62 && (
+                              <div
+                                className="text-[10px] leading-tight"
+                                style={{ color: color.text, opacity: 0.75 }}
+                              >
+                                {trip.seatsAvailable ?? trip.seatsTotal}/
+                                {trip.seatsTotal} {t('myReservation.seats')}
+                              </div>
+                            )}
                           </div>
-                          {height >= 46 && (
-                            <div
-                              className="text-[10px] leading-tight truncate"
-                              style={{ color: color.bar }}
-                            >
-                              {route.fromCity} → {route.toCity}
-                            </div>
-                          )}
-                          {height >= 62 && (
-                            <div
-                              className="text-[10px] leading-tight"
-                              style={{ color: color.text, opacity: 0.75 }}
-                            >
-                              {trip.seatsAvailable ?? trip.seatsTotal}/{trip.seatsTotal} sed.
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    },
+                  )}
                 </div>
               );
             })}
@@ -411,7 +505,10 @@ export default function TripsTab({ trips, isPending }: TripsTabProps) {
       {editingRoute && (
         <EditRouteModal
           isOpen={!!editingRoute}
-          onClose={(saved) => { setEditingRoute(null); if (saved) router.refresh(); }}
+          onClose={(saved) => {
+            setEditingRoute(null);
+            if (saved) router.refresh();
+          }}
           route={editingRoute}
         />
       )}
