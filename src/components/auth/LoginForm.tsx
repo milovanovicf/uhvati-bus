@@ -10,12 +10,14 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     const res = await fetch('/api/login', {
       method: 'POST',
@@ -25,6 +27,7 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 
     if (!res.ok) {
       const data = await res.json();
+      setIsLoading(false);
       if (data.error === 'EMAIL_NOT_VERIFIED') {
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         return;
@@ -54,8 +57,8 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-      <Button type="submit" className="cursor-pointer">
-        {t('auth.loginBtn')}
+      <Button type="submit" disabled={isLoading} className="cursor-pointer">
+        {isLoading ? t('auth.loggingIn') : t('auth.loginBtn')}
       </Button>
     </form>
   );

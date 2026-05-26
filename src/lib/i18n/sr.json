@@ -83,7 +83,9 @@
     "passwordPlaceholder": "Lozinka",
     "companyNamePlaceholder": "Ime firme",
     "loginBtn": "Prijavi se",
-    "registerBtn": "Registruj se"
+    "registerBtn": "Registruj se",
+    "loggingIn": "Prijavljivanje...",
+    "loggingOut": "Izlogovavanje..."
   },
   "routes": {
     "from": "Od",
@@ -285,6 +287,7 @@
     "addTrip": "Dodaj putovanje",
     "tabTrips": "Putovanja",
     "tabSettings": "Podešavanja",
+    "tabAccount": "Nalog",
     "loading": "Učitavanje...",
     "loadingTrips": "Učitavanje putovanja...",
     "noTrips": "Nemate kreirana putovanja",
