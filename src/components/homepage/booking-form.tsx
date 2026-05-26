@@ -57,7 +57,7 @@ export default function BookingForm() {
   };
 
   return (
-    <Card className="w-90">
+    <Card className="w-full sm:w-90">
       <CardHeader>
         <CardTitle>{t('booking.title')}</CardTitle>
       </CardHeader>
@@ -122,10 +122,7 @@ export default function BookingForm() {
             </div>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div
-              className="flex-grow min-w-0"
-              style={{ maxWidth: '200px', width: '200px' }}
-            >
+            <div className="w-full sm:w-[200px]">
               <CitySelector
                 label={t('booking.from')}
                 selectedCity={fromCity}
@@ -133,7 +130,7 @@ export default function BookingForm() {
                 excludeCityIds={toCity ? [toCity.id] : []}
               />
             </div>
-            <div className="flex items-end justify-center pt-6">
+            <div className="flex items-center justify-center sm:items-end sm:pt-6">
               <Button
                 type="button"
                 size="icon"
@@ -148,10 +145,7 @@ export default function BookingForm() {
                 <ArrowLeftRight className="h-5 w-5" />
               </Button>
             </div>
-            <div
-              className="flex-grow min-w-0"
-              style={{ maxWidth: '200px', width: '200px' }}
-            >
+            <div className="w-full sm:w-[200px]">
               <CitySelector
                 label={t('booking.to')}
                 selectedCity={toCity}

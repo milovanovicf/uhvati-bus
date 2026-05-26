@@ -69,7 +69,7 @@ export default function CitySelector({
           <Button
             variant="outline"
             role="combobox"
-            className="flex justify-between items-center border p-2 rounded w-full max-w-[180px]"
+            className="flex justify-between items-center border p-2 rounded w-full"
           >
             <span
               title={selectedCity?.name}

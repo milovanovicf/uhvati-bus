@@ -13,7 +13,7 @@ export default function Hero() {
     >
       <div className="absolute inset-0 bg-black/60 md:hidden"></div>
 
-      <div className="relative z-10 flex gap-4 flex-col">
+      <div className="relative z-10 flex gap-4 flex-col w-full sm:w-auto">
         <h1 className="text-4xl xl:text-6xl 2xl:text-8xl text-white max-w-[270px] xl:max-w-[460px] 2xl:max-w-[750px]">
           {t('hero.title')}
         </h1>
