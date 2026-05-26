@@ -17,11 +17,10 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Create date range for the selected date
     const startDate = new Date(date);
     const endDate = new Date(new Date(date).setHours(23, 59, 59, 999));
+    const now = new Date();
 
-    // If time is provided, filter trips after the selected time
     let departureFilter: any = {
       gte: startDate,
       lte: endDate,
@@ -31,10 +30,13 @@ export async function GET(req: NextRequest) {
       const [hours, minutes] = time.split(':');
       const targetTime = new Date(date);
       targetTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-      // Only show trips that depart after the selected time
       departureFilter = {
         gte: targetTime,
+        lte: endDate,
+      };
+    } else if (startDate.toDateString() === now.toDateString()) {
+      departureFilter = {
+        gte: now,
         lte: endDate,
       };
     }

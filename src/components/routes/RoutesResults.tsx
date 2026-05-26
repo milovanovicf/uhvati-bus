@@ -200,6 +200,7 @@ export default function RoutesResults({ fromId, toId, date, time }: RoutesResult
                 mode="single"
                 selected={editDate}
                 onSelect={(d) => { if (d) { setEditDate(d); setCalendarOpen(false); } }}
+                disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
                 captionLayout="dropdown"
                 locale={dateFnsLocale}
               />

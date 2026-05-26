@@ -96,6 +96,7 @@ export default function BookingForm() {
                       setDate(selectedDate);
                       setOpen(false);
                     }}
+                    disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
                     captionLayout="dropdown"
                     locale={srLatn}
                   />
