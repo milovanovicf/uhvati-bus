@@ -4,11 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { srLatn } from 'date-fns/locale';
-import {
-  ArrowLeftRight,
-  Calendar as CalendarIcon,
-  HelpCircle,
-} from 'lucide-react';
+import { ArrowLeftRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -19,12 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CitySelector from './city-selector';
 import { City } from '@/generated/prisma';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '../ui/tooltip';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 const { DateTime } = require('luxon');
 
@@ -41,7 +31,9 @@ export default function BookingForm() {
   const { language, t } = useTranslation();
 
   const formattedDate = date
-    ? DateTime.fromJSDate(date).setLocale(language === 'sr' ? 'sr-Latn' : 'en').toFormat('d. LLL yyyy')
+    ? DateTime.fromJSDate(date)
+        .setLocale(language === 'sr' ? 'sr-Latn' : 'en')
+        .toFormat('d. LLL yyyy')
     : '';
 
   const handleSearch = () => {
@@ -96,7 +88,9 @@ export default function BookingForm() {
                       setDate(selectedDate);
                       setOpen(false);
                     }}
-                    disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
+                    disabled={{
+                      before: new Date(new Date().setHours(0, 0, 0, 0)),
+                    }}
                     captionLayout="dropdown"
                     locale={srLatn}
                   />
@@ -169,7 +163,9 @@ export default function BookingForm() {
           <div>
             <label className="block text-sm font-medium mb-1">
               {t('booking.fullName')}{' '}
-              <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
+              <span className="text-gray-400 font-normal">
+                {t('booking.optional')}
+              </span>
             </label>
             <Input
               type="text"
@@ -181,7 +177,10 @@ export default function BookingForm() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              {t('booking.email')} <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
+              {t('booking.email')}{' '}
+              <span className="text-gray-400 font-normal">
+                {t('booking.optional')}
+              </span>
             </label>
             <Input
               type="email"
@@ -194,7 +193,9 @@ export default function BookingForm() {
           <div>
             <label className="block text-sm font-medium mb-1">
               {t('booking.seats')}{' '}
-              <span className="text-gray-400 font-normal">{t('booking.optional')}</span>
+              <span className="text-gray-400 font-normal">
+                {t('booking.optional')}
+              </span>
             </label>
             <Input
               type="number"
@@ -213,18 +214,6 @@ export default function BookingForm() {
             >
               {t('booking.searchBtn')}
             </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-s text-base bg-gray-600">
-                  <p>{t('booking.tooltipText')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
       </CardContent>

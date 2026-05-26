@@ -34,7 +34,6 @@
     "email": "Email",
     "seats": "Number of seats",
     "searchBtn": "View routes",
-    "tooltipText": "By clicking View routes you will see all available departures for the selected date and time.",
     "validation": "Please select departure city, destination city and date."
   },
   "howItWorks": {

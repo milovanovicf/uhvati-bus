@@ -34,7 +34,6 @@
     "email": "Email",
     "seats": "Broj sedišta",
     "searchBtn": "Pogledaj rute",
-    "tooltipText": "Klikom na Pogledaj rute videćete sve dostupne polaske za izabrani datum i vreme.",
     "validation": "Izaberite polazni grad, odredišni grad i datum."
   },
   "howItWorks": {
