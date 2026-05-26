@@ -1,16 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '../ui/navigation-menu';
 import AuthModal from '../auth/AuthModal';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
@@ -18,22 +10,25 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { language, setLanguage, t } = useTranslation();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const openAuthModal = (mode: 'login' | 'register') => {
     setAuthMode(mode);
     setAuthOpen(true);
+    setDropdownOpen(false);
   };
-
-  const langToggle = (
-    <button
-      onClick={() => setLanguage(language === 'sr' ? 'en' : 'sr')}
-      className="text-sm font-medium px-2.5 py-1 border rounded hover:bg-gray-50 transition-colors"
-      title={language === 'sr' ? 'Switch to English' : 'Prebaci na srpski'}
-    >
-      {language === 'sr' ? 'EN' : 'SR'}
-    </button>
-  );
 
   return (
     <header className="border-b px-6 py-4 flex items-center justify-between sm:px-50 sm:py-10">
@@ -42,50 +37,49 @@ export default function Header() {
       </a>
 
       {/* Desktop Menu */}
-      <div className="hidden md:flex items-center gap-3">
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuLink href="/o-nama" className="text-md">
-                {t('nav.aboutUs')}
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+      <div className="hidden md:flex items-center gap-5">
+        <a href="/o-nama" className="text-md hover:text-gray-600 transition-colors">
+          {t('nav.aboutUs')}
+        </a>
+        <a href="/za-firme" className="text-md hover:text-gray-600 transition-colors">
+          {t('nav.forCompanies')}
+        </a>
 
-            <NavigationMenuItem>
-              <NavigationMenuLink href="/za-firme" className="text-md">
-                {t('nav.forCompanies')}
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+        {/* Auth dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            className="flex items-center gap-1 text-md hover:text-gray-600 transition-colors"
+            onClick={() => setDropdownOpen((o) => !o)}
+          >
+            {t('nav.auth')}
+            <ChevronDown className={`h-4 w-4 transition-transform duration-150 ${dropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
 
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="text-md bg-transparent hover:bg-transparent">
-                {t('nav.auth')}
-              </NavigationMenuTrigger>
-              <NavigationMenuContent className="bg-white shadow-md rounded p-2">
-                <ul className="flex flex-col gap-2 min-w-[160px]">
-                  <li>
-                    <button
-                      onClick={() => openAuthModal('login')}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm cursor-pointer"
-                    >
-                      {t('nav.loginCompany')}
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => openAuthModal('register')}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm cursor-pointer"
-                    >
-                      {t('nav.registerCompany')}
-                    </button>
-                  </li>
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+          {dropdownOpen && (
+            <div className="absolute right-0 top-full mt-2 bg-white border rounded-md shadow-md py-1 min-w-[160px] z-50">
+              <button
+                onClick={() => openAuthModal('login')}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+              >
+                {t('nav.loginCompany')}
+              </button>
+              <button
+                onClick={() => openAuthModal('register')}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+              >
+                {t('nav.registerCompany')}
+              </button>
+            </div>
+          )}
+        </div>
 
-        {langToggle}
+        <button
+          onClick={() => setLanguage(language === 'sr' ? 'en' : 'sr')}
+          className="text-sm font-medium px-2.5 py-1 border rounded hover:bg-gray-50 transition-colors"
+          title={language === 'sr' ? 'Switch to English' : 'Prebaci na srpski'}
+        >
+          {language === 'sr' ? 'EN' : 'SR'}
+        </button>
       </div>
 
       <AuthModal
