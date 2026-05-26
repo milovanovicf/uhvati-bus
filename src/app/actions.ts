@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { sendBookingConfirmation } from '@/lib/email';
+import { signReservationToken, verifyReservationToken } from '@/lib/reservationToken';
 
 type ReservationState = {
   success: boolean;
@@ -116,6 +117,9 @@ export async function handleReservationCreate(
       },
     });
 
+    const reservationToken = signReservationToken(reservation.id);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+
     await sendBookingConfirmation({
       to: email,
       fullName,
@@ -126,6 +130,7 @@ export async function handleReservationCreate(
       arrival: trip.arrival,
       companyName: company.name,
       seats: assignedSeats,
+      viewCancelUrl: `${baseUrl}/rezervacija/${reservationToken}`,
     });
 
     return {
@@ -768,4 +773,24 @@ export async function updateCompanySettings(formData: FormData) {
   });
 
   revalidatePath('/company');
+}
+
+export async function cancelReservation(
+  token: string,
+): Promise<{ success: boolean; error?: 'invalid_token' | 'not_found' | 'already_departed' }> {
+  const reservationId = verifyReservationToken(token);
+  if (!reservationId) return { success: false, error: 'invalid_token' };
+
+  const reservation = await prisma.reservation.findUnique({
+    where: { id: reservationId },
+    include: { trip: true },
+  });
+
+  if (!reservation) return { success: false, error: 'not_found' };
+  if (new Date(reservation.trip.departure) < new Date()) {
+    return { success: false, error: 'already_departed' };
+  }
+
+  await prisma.reservation.delete({ where: { id: reservationId } });
+  return { success: true };
 }
