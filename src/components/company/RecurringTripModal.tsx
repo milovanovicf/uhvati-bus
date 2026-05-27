@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CalendarIcon, Plus, Trash2, ArrowLeftRight } from 'lucide-react';
 import CitySelector from '@/components/homepage/city-selector';
-import { City } from '@/generated/prisma';
+import { City } from '@prisma/client';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { srLatn, enUS } from 'date-fns/locale';

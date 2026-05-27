@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CitySelector from './city-selector';
-import { City } from '@/generated/prisma';
+import { City } from '@prisma/client';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 const { DateTime } = require('luxon');
 

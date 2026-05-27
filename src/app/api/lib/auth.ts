@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import { Company } from '@/generated/prisma';
+import { Company } from '@prisma/client';
 import { prisma } from '@/app/utils/db';
 
 export async function getCompanyFromToken() {

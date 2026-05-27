@@ -4,7 +4,7 @@ import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Company } from '@/generated/prisma';
+import { Company } from '@prisma/client';
 import { updateCompanySettings } from '@/app/actions';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 

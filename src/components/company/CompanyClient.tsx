@@ -4,7 +4,7 @@ import React, { useState, useTransition, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, Bus, CircleUser, Settings, LogOut } from 'lucide-react';
-import { Company } from '@/generated/prisma';
+import { Company } from '@prisma/client';
 import TripsTab from './TripsTab';
 import SettingsTab from './SettingsTab';
 import TripModal from './RecurringTripModal';
