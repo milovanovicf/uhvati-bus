@@ -3,14 +3,15 @@
 import React, { useState, useTransition, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, Bus, CircleUser, Settings, LogOut } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, Bus, CircleUser, Settings, LogOut, BarChart3 } from 'lucide-react';
 import { Company } from '@prisma/client';
 import TripsTab from './TripsTab';
 import SettingsTab from './SettingsTab';
+import StatsTab from './StatsTab';
 import TripModal from './RecurringTripModal';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
-type Tab = 'trips' | 'settings';
+type Tab = 'trips' | 'stats' | 'settings';
 
 export type TripReservation = {
   id: number;
@@ -46,14 +47,18 @@ export type RouteWithCities = {
   to: { name: string };
 };
 
+type CompanyStats = React.ComponentProps<typeof StatsTab>['stats'];
+
 interface DashboardClientProps {
   company: Company;
   initialTrips: TripWithDetails[];
+  stats: CompanyStats;
 }
 
 export default function DashboardClient({
   company,
   initialTrips,
+  stats,
 }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState<Tab>('trips');
   const [modalOpen, setModalOpen] = useState(false);
@@ -91,6 +96,8 @@ export default function DashboardClient({
     switch (activeTab) {
       case 'trips':
         return <TripsTab trips={initialTrips} isPending={isPending} />;
+      case 'stats':
+        return <StatsTab stats={stats} />;
       case 'settings':
         return <SettingsTab company={company} isPending={isPending} />;
       default:
@@ -141,7 +148,7 @@ export default function DashboardClient({
                 {!collapsed && t('dashboard.addTrip')}
               </Button>
 
-              {/* Trips tab */}
+              {/* Nav tabs */}
               <ul className="space-y-1">
                 <li>
                   <button
@@ -154,6 +161,19 @@ export default function DashboardClient({
                   >
                     <Bus className="h-4 w-4 shrink-0" />
                     {!collapsed && <span className="text-sm">{t('dashboard.tabTrips')}</span>}
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`cursor-pointer w-full p-2 rounded hover:bg-gray-100 flex items-center ${
+                      collapsed ? 'justify-center' : 'gap-2'
+                    } ${activeTab === 'stats' ? 'font-semibold bg-gray-100' : ''}`}
+                    onClick={() => handleTabChange('stats')}
+                    disabled={isPending}
+                    title={collapsed ? t('dashboard.tabStats') : undefined}
+                  >
+                    <BarChart3 className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span className="text-sm">{t('dashboard.tabStats')}</span>}
                   </button>
                 </li>
 

@@ -7,9 +7,11 @@ import {
   CheckCircle,
   Bus,
   MapPin,
-  Calendar,
+  CalendarRange,
   Users,
-  BarChart,
+  BarChart3,
+  Mail,
+  Armchair,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
@@ -17,49 +19,19 @@ export default function ForCompaniesPage() {
   const { t } = useTranslation();
 
   const steps = [
-    {
-      number: '01',
-      title: t('forCompanies.s1Title'),
-      description: t('forCompanies.s1Desc'),
-    },
-    {
-      number: '02',
-      title: t('forCompanies.s2Title'),
-      description: t('forCompanies.s2Desc'),
-    },
-    {
-      number: '03',
-      title: t('forCompanies.s3Title'),
-      description: t('forCompanies.s3Desc'),
-    },
-    {
-      number: '04',
-      title: t('forCompanies.s4Title'),
-      description: t('forCompanies.s4Desc'),
-    },
+    { number: '01', title: t('forCompanies.s1Title'), description: t('forCompanies.s1Desc') },
+    { number: '02', title: t('forCompanies.s2Title'), description: t('forCompanies.s2Desc') },
+    { number: '03', title: t('forCompanies.s3Title'), description: t('forCompanies.s3Desc') },
+    { number: '04', title: t('forCompanies.s4Title'), description: t('forCompanies.s4Desc') },
   ];
 
   const features = [
-    {
-      icon: MapPin,
-      title: t('forCompanies.f1Title'),
-      description: t('forCompanies.f1Desc'),
-    },
-    {
-      icon: Calendar,
-      title: t('forCompanies.f2Title'),
-      description: t('forCompanies.f2Desc'),
-    },
-    {
-      icon: Users,
-      title: t('forCompanies.f3Title'),
-      description: t('forCompanies.f3Desc'),
-    },
-    {
-      icon: BarChart,
-      title: t('forCompanies.f4Title'),
-      description: t('forCompanies.f4Desc'),
-    },
+    { icon: MapPin,       title: t('forCompanies.f1Title'), description: t('forCompanies.f1Desc') },
+    { icon: CalendarRange,title: t('forCompanies.f2Title'), description: t('forCompanies.f2Desc') },
+    { icon: Armchair,     title: t('forCompanies.f3Title'), description: t('forCompanies.f3Desc') },
+    { icon: Mail,         title: t('forCompanies.f4Title'), description: t('forCompanies.f4Desc') },
+    { icon: Users,        title: t('forCompanies.f5Title'), description: t('forCompanies.f5Desc') },
+    { icon: BarChart3,    title: t('forCompanies.f6Title'), description: t('forCompanies.f6Desc') },
   ];
 
   const benefits = [
@@ -78,7 +50,8 @@ export default function ForCompaniesPage() {
     <>
       <Header />
       <div className="min-h-screen bg-white">
-        {/* Hero Section */}
+
+        {/* Hero */}
         <section className="relative py-25 px-5 sm:px-15 md:px-25 lg:px-40 bg-gradient-to-b from-orange-50 to-white">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
@@ -90,18 +63,13 @@ export default function ForCompaniesPage() {
           </div>
         </section>
 
-        {/* How It Works */}
+        {/* How it works */}
         <section className="py-15 px-5 sm:px-15 md:px-25 lg:px-40">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-                {t('forCompanies.howTitle')}
-              </h2>
-              <p className="text-xl text-gray-600">
-                {t('forCompanies.howSubtitle')}
-              </p>
+              <h2 className="text-4xl sm:text-5xl font-bold mb-4">{t('forCompanies.howTitle')}</h2>
+              <p className="text-xl text-gray-600">{t('forCompanies.howSubtitle')}</p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {steps.map((step) => (
                 <div key={step.number} className="relative">
@@ -113,9 +81,7 @@ export default function ForCompaniesPage() {
                       <CardTitle className="text-xl">{step.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-gray-600 leading-relaxed">
-                        {step.description}
-                      </p>
+                      <p className="text-gray-600 leading-relaxed">{step.description}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -124,34 +90,24 @@ export default function ForCompaniesPage() {
           </div>
         </section>
 
-        {/* Features */}
+        {/* Features — 6 cards in 3-col grid */}
         <section className="py-15 px-5 sm:px-15 md:px-25 lg:px-40 bg-gray-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-                {t('forCompanies.featuresTitle')}
-              </h2>
-              <p className="text-xl text-gray-600">
-                {t('forCompanies.featuresSubtitle')}
-              </p>
+              <h2 className="text-4xl sm:text-5xl font-bold mb-4">{t('forCompanies.featuresTitle')}</h2>
+              <p className="text-xl text-gray-600">{t('forCompanies.featuresSubtitle')}</p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature) => (
-                <Card
-                  key={feature.title}
-                  className="hover:shadow-lg transition-shadow"
-                >
-                  <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="p-3 bg-orange-100 rounded-lg">
-                      <feature.icon className="h-6 w-6 text-orange-500" />
+                <Card key={feature.title} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                    <div className="p-3 bg-orange-100 rounded-lg shrink-0">
+                      <feature.icon className="h-5 w-5 text-orange-500" />
                     </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardTitle className="text-lg leading-snug">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 leading-relaxed">
-                      {feature.description}
-                    </p>
+                    <p className="text-gray-600 leading-relaxed text-sm">{feature.description}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -163,18 +119,13 @@ export default function ForCompaniesPage() {
         <section className="py-15 px-5 sm:px-15 md:px-25 lg:px-40">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-                {t('forCompanies.benefitsTitle')}
-              </h2>
-              <p className="text-xl text-gray-600">
-                {t('forCompanies.benefitsSubtitle')}
-              </p>
+              <h2 className="text-4xl sm:text-5xl font-bold mb-4">{t('forCompanies.benefitsTitle')}</h2>
+              <p className="text-xl text-gray-600">{t('forCompanies.benefitsSubtitle')}</p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {benefits.map((benefit) => (
-                <div key={benefit} className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                <div key={benefit} className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                   <span className="text-gray-700">{benefit}</span>
                 </div>
               ))}
@@ -182,16 +133,12 @@ export default function ForCompaniesPage() {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {/* CTA */}
         <section className="py-20 px-5 sm:px-15 md:px-25 lg:px-40 bg-gradient-to-r from-orange-500 to-orange-400 text-white text-center">
           <div className="max-w-3xl mx-auto">
             <Bus className="h-16 w-16 mx-auto mb-6 opacity-80" />
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              {t('forCompanies.ctaTitle')}
-            </h2>
-            <p className="text-xl text-orange-100 mb-8">
-              {t('forCompanies.ctaSubtitle')}
-            </p>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">{t('forCompanies.ctaTitle')}</h2>
+            <p className="text-xl text-orange-100 mb-8">{t('forCompanies.ctaSubtitle')}</p>
             <a
               href="/?auth=register"
               className="inline-block bg-white text-orange-500 font-bold text-lg px-10 py-4 rounded-full hover:bg-orange-50 transition-colors"
@@ -200,6 +147,7 @@ export default function ForCompaniesPage() {
             </a>
           </div>
         </section>
+
       </div>
       <Footer />
     </>

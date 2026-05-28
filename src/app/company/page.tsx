@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getCompanyTrips, getCurrentCompany } from '../actions';
+import { getCompanyTrips, getCompanyStats, getCurrentCompany } from '../actions';
 import CompanyClient from '@/components/company/CompanyClient';
 import { LogIn, AlertCircle } from 'lucide-react';
 
@@ -13,13 +13,17 @@ export default async function CompanyDashboard() {
       redirect(`/verify-email?email=${encodeURIComponent(company.email)}`);
     }
 
-    const trips = await getCompanyTrips();
+    const [trips, stats] = await Promise.all([
+      getCompanyTrips(),
+      getCompanyStats(),
+    ]);
 
     return (
       <div className="min-h-screen p-6 bg-slate-50">
         <CompanyClient
           company={company}
           initialTrips={trips}
+          stats={stats}
         />
       </div>
     );
