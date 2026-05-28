@@ -795,3 +795,131 @@ export async function cancelReservation(
   await prisma.reservation.delete({ where: { id: reservationId } });
   return { success: true };
 }
+
+function countSeats(seats: unknown): number {
+  return Array.isArray(seats) ? seats.length : 0;
+}
+
+export async function getCompanyStats() {
+  const company = await getCurrentCompany();
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // ── This-month summary ──────────────────────────────────────────────────────
+  const [tripsThisMonth, reservationsThisMonth] = await Promise.all([
+    prisma.trip.findMany({
+      where: { companyId: company.id, departure: { gte: startOfMonth } },
+      select: { seatsTotal: true, reservations: { select: { seats: true } } },
+    }),
+    prisma.reservation.findMany({
+      where: { companyId: company.id, createdAt: { gte: startOfMonth } },
+      select: { seats: true },
+    }),
+  ]);
+
+  const seatsSoldThisMonth = reservationsThisMonth.reduce(
+    (sum, r) => sum + countSeats(r.seats),
+    0
+  );
+  const capacityThisMonth = tripsThisMonth.reduce((sum, t) => sum + t.seatsTotal, 0);
+  const occupancyThisMonth =
+    capacityThisMonth > 0
+      ? Math.round((seatsSoldThisMonth / capacityThisMonth) * 100)
+      : 0;
+
+  // ── Upcoming trips ──────────────────────────────────────────────────────────
+  const upcomingRaw = await prisma.trip.findMany({
+    where: { companyId: company.id, departure: { gte: now } },
+    include: {
+      route: { select: { from: { select: { name: true } }, to: { select: { name: true } } } },
+      reservations: { select: { seats: true } },
+    },
+    orderBy: { departure: 'asc' },
+    take: 10,
+  });
+
+  const upcomingTrips = upcomingRaw.map((t) => {
+    const sold = t.reservations.reduce((sum, r) => sum + countSeats(r.seats), 0);
+    return {
+      id: t.id,
+      from: t.route.from.name,
+      to: t.route.to.name,
+      departure: t.departure,
+      seatsTotal: t.seatsTotal,
+      seatsSold: sold,
+    };
+  });
+
+  // ── Route performance (all time) ────────────────────────────────────────────
+  const routesRaw = await prisma.route.findMany({
+    where: { companyId: company.id },
+    include: {
+      from: { select: { name: true } },
+      to: { select: { name: true } },
+      trips: { include: { reservations: { select: { seats: true } } } },
+    },
+  });
+
+  const routeStats = routesRaw.map((r) => {
+    const totalTrips = r.trips.length;
+    const totalPassengers = r.trips.reduce(
+      (sum, t) => sum + t.reservations.reduce((s, res) => s + countSeats(res.seats), 0),
+      0
+    );
+    const totalCapacity = r.trips.reduce((sum, t) => sum + t.seatsTotal, 0);
+    const avgOccupancy =
+      totalCapacity > 0 ? Math.round((totalPassengers / totalCapacity) * 100) : 0;
+
+    return {
+      from: r.from.name,
+      to: r.to.name,
+      totalTrips,
+      totalPassengers,
+      avgOccupancy,
+    };
+  });
+
+  // ── Recent reservations ─────────────────────────────────────────────────────
+  const recentRaw = await prisma.reservation.findMany({
+    where: { companyId: company.id },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+    select: {
+      id: true,
+      bookingRef: true,
+      fullName: true,
+      seats: true,
+      createdAt: true,
+      trip: {
+        select: {
+          departure: true,
+          route: { select: { from: { select: { name: true } }, to: { select: { name: true } } } },
+        },
+      },
+    },
+  });
+
+  const recentReservations = recentRaw.map((r) => ({
+    id: r.id,
+    bookingRef: r.bookingRef,
+    fullName: r.fullName,
+    seats: countSeats(r.seats),
+    from: r.trip.route.from.name,
+    to: r.trip.route.to.name,
+    departure: r.trip.departure,
+    createdAt: r.createdAt,
+  }));
+
+  return {
+    thisMonth: {
+      trips: tripsThisMonth.length,
+      reservations: reservationsThisMonth.length,
+      seatsSold: seatsSoldThisMonth,
+      occupancy: occupancyThisMonth,
+    },
+    upcomingTrips,
+    routeStats,
+    recentReservations,
+  };
+}
