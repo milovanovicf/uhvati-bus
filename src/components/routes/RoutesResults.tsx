@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { srLatn, enUS } from 'date-fns/locale';
 import ReservationModal from './ReservationModal';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { cityToSlug } from '@/lib/slug';
 
 interface Trip {
   id: number;
@@ -116,12 +117,21 @@ export default function RoutesResults({ fromId, toId, date, time }: RoutesResult
     setActiveDate(dateStr);
     setActiveTime(editTime);
 
-    const params = new URLSearchParams({ fromId: editFromId, toId: editToId, date: dateStr });
-    if (editTime) params.set('time', editTime);
-    if (prefillFullName) params.set('fullName', prefillFullName);
-    if (prefillEmail) params.set('email', prefillEmail);
-    params.set('seats', prefillSeats.toString());
-    router.replace(`/routes?${params}`, { scroll: false });
+    const fromName = cities.find((c) => c.id === Number(editFromId))?.name;
+    const toName = cities.find((c) => c.id === Number(editToId))?.name;
+
+    if (fromName && toName) {
+      const params = new URLSearchParams();
+      if (editTime) params.set('vreme', editTime);
+      if (prefillFullName) params.set('fullName', prefillFullName);
+      if (prefillEmail) params.set('email', prefillEmail);
+      params.set('seats', prefillSeats.toString());
+      const query = params.toString();
+      router.replace(
+        `/rute/${cityToSlug(fromName)}/${cityToSlug(toName)}/${dateStr}${query ? `?${query}` : ''}`,
+        { scroll: false }
+      );
+    }
   }
 
   function swapCities() {
