@@ -27,7 +27,7 @@ export default async function RootLayout({
   const initialLanguage: Language = langCookie === 'en' ? 'en' : 'sr';
 
   return (
-    <html lang="en" className={questrial.className}>
+    <html lang="sr" className={questrial.className}>
       <body>
         <Providers initialLanguage={initialLanguage}>{children}</Providers>
       </body>

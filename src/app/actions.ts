@@ -118,7 +118,8 @@ export async function handleReservationCreate(
     });
 
     const reservationToken = signReservationToken(reservation.id);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+    const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? vercelUrl ?? 'http://localhost:3000';
 
     await sendBookingConfirmation({
       to: email,

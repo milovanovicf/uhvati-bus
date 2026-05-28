@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import CitySelector from './city-selector';
 import { City } from '@prisma/client';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { cityToSlug } from '@/lib/slug';
 const { DateTime } = require('luxon');
 
 export default function BookingForm() {
@@ -42,18 +43,18 @@ export default function BookingForm() {
       return;
     }
 
-    const params = new URLSearchParams({
-      fromId: fromCity.id.toString(),
-      toId: toCity.id.toString(),
-      date: DateTime.fromJSDate(date).toISODate() || '',
-    });
-    if (filterByTime && time) params.set('time', time);
+    const isoDate = DateTime.fromJSDate(date).toISODate() || '';
+    const fromSlug = cityToSlug(fromCity.name);
+    const toSlug = cityToSlug(toCity.name);
 
+    const params = new URLSearchParams();
+    if (filterByTime && time) params.set('vreme', time);
     if (fullName) params.set('fullName', fullName);
     if (email) params.set('email', email);
     params.set('seats', seats.toString());
 
-    window.location.href = `/routes?${params}`;
+    const query = params.toString();
+    window.location.href = `/rute/${fromSlug}/${toSlug}/${isoDate}${query ? `?${query}` : ''}`;
   };
 
   return (
