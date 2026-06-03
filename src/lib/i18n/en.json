@@ -92,7 +92,13 @@
     "loginBtn": "Log in",
     "registerBtn": "Sign up",
     "loggingIn": "Logging in...",
-    "loggingOut": "Logging out..."
+    "loggingOut": "Logging out...",
+    "pendingTitle": "Account pending approval",
+    "pendingMsg": "Your account has been created successfully. An administrator will review and approve it shortly.",
+    "disabledTitle": "Account disabled",
+    "disabledMsg": "Your account has been disabled. Please contact an administrator for more information.",
+    "backToLogin": "Back to login",
+    "invalidCredentials": "Invalid email address or password."
   },
   "routes": {
     "from": "From",

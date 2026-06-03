@@ -214,6 +214,14 @@ export async function getCurrentCompany() {
     throw new Error('Company not found for user');
   }
 
+  if (company.status === 'PENDING') {
+    throw new Error('PENDING_APPROVAL');
+  }
+
+  if (company.status === 'DISABLED') {
+    throw new Error('ACCOUNT_DISABLED');
+  }
+
   return company;
 }
 

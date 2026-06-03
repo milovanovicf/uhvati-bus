@@ -1,0 +1,2 @@
+CREATE TYPE "CompanyStatus" AS ENUM ('PENDING', 'ACTIVE', 'DISABLED');
+ALTER TABLE "Company" ADD COLUMN "status" "CompanyStatus" NOT NULL DEFAULT 'ACTIVE';

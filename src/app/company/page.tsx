@@ -28,19 +28,39 @@ export default async function CompanyDashboard() {
       </div>
     );
   } catch (error) {
-    const isUnauthorized =
-      error instanceof Error && error.message === 'Unauthorized';
+    const msg = error instanceof Error ? error.message : '';
+    const isPending = msg === 'PENDING_APPROVAL';
+    const isDisabled = msg === 'ACCOUNT_DISABLED';
+    const isUnauthorized = msg === 'Unauthorized';
 
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm border p-10 max-w-md w-full text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-red-100 rounded-full p-3">
-              <AlertCircle className="h-8 w-8 text-red-500" />
+            <div className={`rounded-full p-3 ${isPending ? 'bg-amber-100' : 'bg-red-100'}`}>
+              <AlertCircle className={`h-8 w-8 ${isPending ? 'text-amber-500' : 'text-red-500'}`} />
             </div>
           </div>
 
-          {isUnauthorized ? (
+          {isPending ? (
+            <>
+              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+                Nalog čeka na odobrenje
+              </h1>
+              <p className="text-gray-500 mb-6">
+                Vaš nalog je kreiran i čeka odobrenje administratora. Bićete obavešteni kada nalog bude aktivan.
+              </p>
+            </>
+          ) : isDisabled ? (
+            <>
+              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+                Nalog je deaktiviran
+              </h1>
+              <p className="text-gray-500 mb-6">
+                Vaš nalog je deaktiviran. Kontaktirajte administratora za više informacija.
+              </p>
+            </>
+          ) : isUnauthorized ? (
             <>
               <h1 className="text-xl font-semibold text-gray-900 mb-2">
                 Niste prijavljeni
