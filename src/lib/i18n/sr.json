@@ -92,7 +92,13 @@
     "loginBtn": "Prijavi se",
     "registerBtn": "Registruj se",
     "loggingIn": "Prijavljivanje...",
-    "loggingOut": "Izlogovavanje..."
+    "loggingOut": "Izlogovavanje...",
+    "pendingTitle": "Nalog čeka na odobrenje",
+    "pendingMsg": "Vaš nalog je uspešno kreiran. Administrator će ga pregledati i odobriti u najkraćem mogućem roku.",
+    "disabledTitle": "Nalog je deaktiviran",
+    "disabledMsg": "Vaš nalog je deaktiviran. Kontaktirajte administratora za više informacija.",
+    "backToLogin": "Nazad na prijavu",
+    "invalidCredentials": "Neispravna email adresa ili lozinka."
   },
   "routes": {
     "from": "Od",

@@ -14,10 +14,15 @@ export async function POST(req: NextRequest) {
   }
 
   if (!company.emailVerified) {
-    return NextResponse.json(
-      { error: 'EMAIL_NOT_VERIFIED' },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: 'EMAIL_NOT_VERIFIED' }, { status: 403 });
+  }
+
+  if (company.status === 'PENDING') {
+    return NextResponse.json({ error: 'PENDING_APPROVAL' }, { status: 403 });
+  }
+
+  if (company.status === 'DISABLED') {
+    return NextResponse.json({ error: 'ACCOUNT_DISABLED' }, { status: 403 });
   }
 
   const token = jwt.sign({ id: company.id }, process.env.JWT_SECRET!, {

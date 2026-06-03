@@ -66,12 +66,19 @@ model City {
   toRoutes   Route[] @relation("ToCity")
 }
 
+enum CompanyStatus {
+  PENDING
+  ACTIVE
+  DISABLED
+}
+
 model Company {
-  id                 Int       @id @default(autoincrement())
+  id                 Int           @id @default(autoincrement())
   name               String
-  email              String    @unique
+  email              String        @unique
   password           String
-  emailVerified      Boolean   @default(false)
+  status             CompanyStatus @default(PENDING)
+  emailVerified      Boolean       @default(false)
   verificationCode   String?
   verificationExpiry DateTime?
 
