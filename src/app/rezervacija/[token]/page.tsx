@@ -19,7 +19,19 @@ export default async function ReservationPage({ params }: Props) {
     where: { id: reservationId },
     select: {
       bookingRef: true,
-      trip: { select: { departure: true } },
+      trip: {
+        select: {
+          departure: true,
+          route: {
+            select: {
+              fromId: true,
+              toId: true,
+              from: { select: { name: true } },
+              to: { select: { name: true } },
+            },
+          },
+        },
+      },
     },
   });
 

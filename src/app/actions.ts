@@ -124,14 +124,17 @@ export async function handleReservationCreate(
     await sendBookingConfirmation({
       to: email,
       fullName,
-      bookingRef,
-      fromCity: trip.route.from.name,
-      toCity: trip.route.to.name,
-      departure: trip.departure,
-      arrival: trip.arrival,
-      companyName: company.name,
-      seats: assignedSeats,
-      viewCancelUrl: `${baseUrl}/rezervacija/${reservationToken}`,
+      outbound: {
+        bookingRef,
+        fromCity: trip.route.from.name,
+        toCity: trip.route.to.name,
+        departure: trip.departure,
+        arrival: trip.arrival,
+        companyName: company.name,
+        seats: assignedSeats,
+        viewCancelUrl: `${baseUrl}/rezervacija/${reservationToken}`,
+      },
+      returnBookingUrl: `${baseUrl}/povratna-karta/${reservationToken}`,
     });
 
     return {
@@ -922,4 +925,244 @@ export async function getCompanyStats() {
     routeStats,
     recentReservations,
   };
+}
+
+// ─── Return trip booking ──────────────────────────────────────────────────────
+
+type ReturnReservationState = { success: boolean; error?: string };
+
+type TripDetails = {
+  bookingRef: string;
+  fromCity: string;
+  toCity: string;
+  departure: Date;
+  arrival: Date;
+  companyName: string;
+  seats: number[];
+  viewCancelUrl: string;
+};
+
+async function createReservationForTrip(
+  tripId: number,
+  fullName: string,
+  email: string,
+  requestedSeatsCount: number,
+  returnOf?: string,
+  skipEmail?: boolean,
+): Promise<ReturnReservationState & { bookingRef?: string; token?: string; tripDetails?: TripDetails }> {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      reservations: true,
+      route: { include: { from: true, to: true } },
+    },
+  });
+
+  if (!trip) return { success: false, error: 'Polazak nije pronađen.' };
+
+  const takenSeats = new Set<number>();
+  for (const r of trip.reservations) {
+    if (Array.isArray(r.seats)) r.seats.forEach((s) => takenSeats.add(s as number));
+  }
+
+  if (requestedSeatsCount > trip.seatsTotal - takenSeats.size) {
+    return { success: false, error: 'Nema dovoljno slobodnih sedišta.' };
+  }
+
+  const assignedSeats: number[] = [];
+  let seat = 1;
+  while (assignedSeats.length < requestedSeatsCount) {
+    if (!takenSeats.has(seat)) assignedSeats.push(seat);
+    seat++;
+  }
+
+  const company = await prisma.company.findFirst({ where: { id: trip.companyId } });
+  if (!company) return { success: false, error: 'Prevoznik nije pronađen.' };
+
+  const bookingRef = generateBookingRef();
+  const reservation = await prisma.reservation.create({
+    data: {
+      bookingRef,
+      fullName,
+      email,
+      seats: assignedSeats,
+      tripId: trip.id,
+      companyId: company.id,
+      returnOf: returnOf ?? null,
+    },
+  });
+
+  const token = signReservationToken(reservation.id);
+  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? vercelUrl ?? 'http://localhost:3000';
+
+  const tripDetails: TripDetails = {
+    bookingRef,
+    fromCity: trip.route.from.name,
+    toCity: trip.route.to.name,
+    departure: trip.departure,
+    arrival: trip.arrival,
+    companyName: company.name,
+    seats: assignedSeats,
+    viewCancelUrl: `${baseUrl}/rezervacija/${token}`,
+  };
+
+  if (!skipEmail) {
+    await sendBookingConfirmation({
+      to: email,
+      fullName,
+      outbound: tripDetails,
+      returnBookingUrl: `${baseUrl}/povratna-karta/${token}`,
+    });
+  }
+
+  return { success: true, bookingRef, token, tripDetails };
+}
+
+export async function bookReturnReservation(
+  _prev: ReturnReservationState,
+  formData: FormData,
+): Promise<ReturnReservationState> {
+  try {
+    const tripId = Number(formData.get('tripId'));
+    const fullName = formData.get('fullName') as string;
+    const email = formData.get('email') as string;
+    const seats = Number(formData.get('seats'));
+    const outboundBookingRef = formData.get('outboundBookingRef') as string;
+
+    if (!tripId || !fullName || !email || !seats || !outboundBookingRef) {
+      return { success: false, error: 'Sva polja su obavezna.' };
+    }
+
+    const result = await createReservationForTrip(tripId, fullName, email, seats, outboundBookingRef);
+    return result;
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Greška.' };
+  }
+}
+
+export async function rescheduleReturnReservation(
+  _prev: ReturnReservationState,
+  formData: FormData,
+): Promise<ReturnReservationState> {
+  try {
+    const existingId = Number(formData.get('existingReservationId'));
+    const newTripId = Number(formData.get('tripId'));
+    const fullName = formData.get('fullName') as string;
+    const email = formData.get('email') as string;
+    const seats = Number(formData.get('seats'));
+    const outboundBookingRef = formData.get('outboundBookingRef') as string;
+
+    if (!existingId || !newTripId || !fullName || !email || !seats || !outboundBookingRef) {
+      return { success: false, error: 'Sva polja su obavezna.' };
+    }
+
+    const existing = await prisma.reservation.findUnique({
+      where: { id: existingId },
+      include: { trip: true },
+    });
+
+    if (!existing) return { success: false, error: 'Rezervacija nije pronađena.' };
+
+    const hoursUntilDep =
+      (new Date(existing.trip.departure).getTime() - Date.now()) / 3_600_000;
+    if (hoursUntilDep < 24) {
+      return { success: false, error: 'Nije moguće menjati rezervaciju manje od 24 sata pre polaska.' };
+    }
+
+    await prisma.reservation.delete({ where: { id: existingId } });
+    const result = await createReservationForTrip(newTripId, fullName, email, seats, outboundBookingRef);
+    return result;
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Greška.' };
+  }
+}
+
+export async function bookRoundTripReservation(
+  _prev: ReturnReservationState,
+  formData: FormData,
+): Promise<ReturnReservationState> {
+  try {
+    const outboundTripId = Number(formData.get('outboundTripId'));
+    const returnTripId = formData.get('returnTripId') ? Number(formData.get('returnTripId')) : null;
+    const fullName = formData.get('fullName') as string;
+    const email = formData.get('email') as string;
+    const seats = Number(formData.get('seats'));
+
+    if (!outboundTripId || !fullName || !email || !seats) {
+      return { success: false, error: 'Sva polja su obavezna.' };
+    }
+
+    const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? vercelUrl ?? 'http://localhost:3000';
+
+    // Book both trips without sending individual emails
+    const outboundResult = await createReservationForTrip(outboundTripId, fullName, email, seats, undefined, true);
+    if (!outboundResult.success || !outboundResult.tripDetails) {
+      return { success: false, error: outboundResult.error };
+    }
+
+    let returnDetails: TripDetails | undefined;
+    if (returnTripId && outboundResult.bookingRef) {
+      const returnResult = await createReservationForTrip(returnTripId, fullName, email, seats, outboundResult.bookingRef, true);
+      returnDetails = returnResult.tripDetails;
+    }
+
+    // Send one combined email
+    await sendBookingConfirmation({
+      to: email,
+      fullName,
+      outbound: outboundResult.tripDetails,
+      returnTrip: returnDetails,
+      returnBookingUrl: returnDetails
+        ? undefined
+        : `${baseUrl}/povratna-karta/${outboundResult.token}`,
+    });
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Greška.' };
+  }
+}
+
+export async function changeTripDate(
+  token: string,
+  newTripId: number,
+): Promise<{ success: boolean; error?: string }> {
+  const reservationId = verifyReservationToken(token);
+  if (!reservationId) return { success: false, error: 'Nevažeći link.' };
+
+  const existing = await prisma.reservation.findUnique({
+    where: { id: reservationId },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      seats: true,
+      returnOf: true,
+      trip: { select: { departure: true } },
+    },
+  });
+
+  if (!existing) return { success: false, error: 'Rezervacija nije pronađena.' };
+
+  const hoursUntilDep =
+    (new Date(existing.trip.departure).getTime() - Date.now()) / 3_600_000;
+  if (hoursUntilDep < 24) {
+    return { success: false, error: 'Nije moguće menjati datum manje od 24 sata pre polaska.' };
+  }
+
+  const seatsCount = Array.isArray(existing.seats) ? existing.seats.length : 1;
+
+  await prisma.reservation.delete({ where: { id: reservationId } });
+
+  const result = await createReservationForTrip(
+    newTripId,
+    existing.fullName,
+    existing.email,
+    seatsCount,
+    existing.returnOf ?? undefined,
+  );
+
+  return { success: result.success, error: result.error };
 }

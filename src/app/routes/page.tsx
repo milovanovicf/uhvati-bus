@@ -11,7 +11,6 @@ interface RoutesPageProps {
     fromId?: string;
     toId?: string;
     date?: string;
-    time?: string;
   }>;
 }
 
@@ -23,7 +22,7 @@ export default async function RoutesPage({ searchParams }: RoutesPageProps) {
   }
 
   const resolvedSearchParams = await searchParams;
-  const { fromId, toId, date, time } = resolvedSearchParams;
+  const { fromId, toId, date } = resolvedSearchParams;
 
   if (!fromId || !toId || !date) {
     redirect('/');
@@ -55,7 +54,6 @@ export default async function RoutesPage({ searchParams }: RoutesPageProps) {
               fromId={fromId}
               toId={toId}
               date={date}
-              time={time}
             />
           </Suspense>
         </div>
