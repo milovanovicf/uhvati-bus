@@ -9,10 +9,10 @@ export default function AboutPage() {
   const { t } = useTranslation();
 
   const stats = [
-    { number: '50+', label: t('aboutUs.stat1Label') },
-    { number: '100+', label: t('aboutUs.stat2Label') },
-    { number: '10.000+', label: t('aboutUs.stat3Label') },
-    { number: '99%', label: t('aboutUs.stat4Label') },
+    { number: '25+', label: t('aboutUs.stat1Label') },
+    { number: '24/7', label: t('aboutUs.stat2Label') },
+    { number: '3', label: t('aboutUs.stat3Label') },
+    { number: '100%', label: t('aboutUs.stat4Label') },
   ];
 
   const values = [
@@ -21,11 +21,11 @@ export default function AboutPage() {
     { title: t('aboutUs.v3Title'), description: t('aboutUs.v3Desc') },
   ];
 
-  const team = [
-    { name: t('aboutUs.m1Name'), role: t('aboutUs.m1Role'), description: t('aboutUs.m1Desc') },
-    { name: t('aboutUs.m2Name'), role: t('aboutUs.m2Role'), description: t('aboutUs.m2Desc') },
-    { name: t('aboutUs.m3Name'), role: t('aboutUs.m3Role'), description: t('aboutUs.m3Desc') },
-  ];
+  const founder = {
+    name: t('aboutUs.m1Name'),
+    role: t('aboutUs.m1Role'),
+    description: t('aboutUs.m1Desc'),
+  };
 
   return (
     <>
@@ -59,7 +59,7 @@ export default function AboutPage() {
 
           <div className="order-1 lg:order-2 relative aspect-[4/3] bg-gray-100 rounded-xl overflow-hidden shadow-lg">
             <Image
-              src="/about/story.jpg"
+              src="/serbian-bus.png"
               alt={t('aboutUs.storyImageAlt')}
               fill
               className="object-cover"
@@ -91,7 +91,7 @@ export default function AboutPage() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="relative aspect-[4/3] bg-gray-100 rounded-xl overflow-hidden shadow-lg">
             <Image
-              src="/about/mission.jpg"
+              src="/bus-interior.avif"
               alt={t('aboutUs.missionImageAlt')}
               fill
               className="object-cover"
@@ -146,25 +146,20 @@ export default function AboutPage() {
             <p className="text-xl text-gray-600">{t('aboutUs.teamSubtitle')}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {team.map((member) => (
-              <div
-                key={member.name}
-                className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow text-center"
-              >
-                <div className="relative w-32 h-32 mx-auto mb-6 bg-gray-200 rounded-full overflow-hidden">
-                  <Image
-                    src={`/about/team/${member.name.split(' ')[0].toLowerCase()}.jpg`}
-                    alt={member.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <h3 className="text-xl font-bold mb-1">{member.name}</h3>
-                <p className="text-orange-500 font-medium mb-4">{member.role}</p>
-                <p className="text-gray-600 leading-relaxed">{member.description}</p>
+          <div className="max-w-md mx-auto">
+            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow text-center">
+              <div className="relative w-32 h-32 mx-auto mb-6 bg-gray-200 rounded-full overflow-hidden">
+                <Image
+                  src="/founder.jpeg"
+                  alt={founder.name}
+                  fill
+                  className="object-cover"
+                />
               </div>
-            ))}
+              <h3 className="text-xl font-bold mb-1">{founder.name}</h3>
+              <p className="text-orange-500 font-medium mb-4">{founder.role}</p>
+              <p className="text-gray-600 leading-relaxed">{founder.description}</p>
+            </div>
           </div>
         </div>
       </section>

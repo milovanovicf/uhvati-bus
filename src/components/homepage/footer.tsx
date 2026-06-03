@@ -10,7 +10,7 @@ export default function Footer() {
   const { t } = useTranslation();
 
   return (
-    <footer className="bg-muted px-5 py-15 mt-12 text-md text-muted-foreground sm:px-15 md:px-20 lg:px-30">
+    <footer className="bg-muted px-5 py-15 text-md text-muted-foreground sm:px-15 md:px-20 lg:px-30">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         {/* About */}
         <div>
