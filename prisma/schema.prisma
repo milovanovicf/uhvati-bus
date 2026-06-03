@@ -23,6 +23,7 @@ model Reservation {
   tripId     Int
   createdAt  DateTime @default(now())
   company    Company  @relation(fields: [companyId], references: [id])
+  returnOf   String?
 }
 
 model Trip {

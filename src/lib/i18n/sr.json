@@ -34,7 +34,15 @@
     "email": "Email",
     "seats": "Broj sedišta",
     "searchBtn": "Pogledaj rute",
-    "validation": "Izaberite polazni grad, odredišni grad i datum."
+    "validation": "Izaberite polazni grad, odredišni grad i datum.",
+    "returnTrip": "Povratna karta",
+    "returnDate": "Datum povratka",
+    "nextStep": "Sledeći korak",
+    "backStep": "Nazad",
+    "makeReservation": "Rezerviši",
+    "step2Title": "Povratno putovanje (opciono)",
+    "step2Hint": "Ostavite prazno ako ne želite povratnu kartu.",
+    "skipReturn": "Preskoči"
   },
   "howItWorks": {
     "title": "Kako funkcioniše?",
@@ -111,7 +119,16 @@
     "noSeatsBtn": "Nema mesta",
     "freeSeats": "{count} slobodno",
     "full": "Popunjeno",
-    "loading": "Učitavanje..."
+    "loading": "Učitavanje...",
+    "tabOutbound": "Polazak",
+    "tabReturn": "Povratak",
+    "returnNoTrips": "Nema dostupnih polazaka za povratnu rutu.",
+    "returnTryOther": "Pokušajte sa drugim datumom.",
+    "selectBtn": "Izaberi",
+    "selectedLabel": "Odabrani polazak",
+    "changeOutbound": "Promeni polazak",
+    "returnStepTitle": "Povratno putovanje (opciono)",
+    "reserveBtn": "Rezerviši"
   },
   "reservation": {
     "title": "Rezerviši sedište",
@@ -142,7 +159,17 @@
     "invalidMsg": "Ovaj link nije validan ili je istekao.",
     "notFoundMsg": "Rezervacija nije pronađena. Možda je već otkazana.",
     "alreadyDeparted": "Putovanje je već krenulo — rezervacija se ne može otkazati.",
-    "cancelError": "Došlo je do greške. Pokušajte ponovo."
+    "cancelError": "Došlo je do greške. Pokušajte ponovo.",
+    "changeDateBtn": "Promeni datum",
+    "changeDateTitle": "Izaberite novi datum",
+    "searchTripsBtn": "Pretraži polaske",
+    "confirmChange": "Potvrdi promenu",
+    "cancelChange": "Odustani",
+    "changedTitle": "Datum promenjen!",
+    "changedMsg": "Nova potvrda je poslata na vaš email.",
+    "changeDisabled": "Datum polaska nije moguće menjati manje od 24 sata pre polaska.",
+    "noTripsOnDate": "Nema dostupnih polazaka za ovaj datum.",
+    "changeError": "Greška pri promeni datuma. Pokušajte ponovo."
   },
   "aboutUs": {
     "heroTitle": "O nama",
@@ -361,5 +388,39 @@
     "colDeparture": "Polazak",
     "colSeats": "Mesta",
     "colBookedAt": "Rezervisano"
+  },
+  "returnBooking": {
+    "title": "Rezervišite povratnu kartu",
+    "subtitle": "Odaberite datum povratka i izaberite polazak.",
+    "route": "Povratna ruta",
+    "selectDate": "Datum povratka",
+    "timeFilter": "filtriraj po vremenu",
+    "searchBtn": "Pretraži polaske",
+    "noTrips": "Nema dostupnih polazaka za ovaj datum.",
+    "tryOther": "Pokušajte sa drugim datumom.",
+    "bookBtn": "Rezerviši",
+    "noSeatsBtn": "Popunjeno",
+    "freeSeats": "{count} slobodnih mesta",
+    "existingTitle": "Vaša povratna rezervacija",
+    "existingRef": "Ref",
+    "existingDep": "Polazak",
+    "changeDateBtn": "Promeni datum",
+    "disabledMsg": "Nije moguće menjati rezervaciju manje od 24 sata pre polaska.",
+    "confirmChange": "Potvrdi novi polazak",
+    "cancelChange": "Odustani",
+    "successTitle": "Rezervacija uspešna!",
+    "successMsg": "Detalji su poslati na vaš email.",
+    "rescheduledTitle": "Datum promenjen!",
+    "rescheduledMsg": "Nova povratna karta je rezervisana. Detalji su poslati na vaš email.",
+    "invalidToken": "Nevažeći ili istekli link.",
+    "seats": "Sedišta",
+    "departure": "Polazak",
+    "arrival": "Dolazak",
+    "duration": "Trajanje",
+    "company": "Prevoznik",
+    "fullName": "Ime i Prezime",
+    "email": "Email",
+    "seatsCount": "Broj sedišta",
+    "loading": "Učitavanje..."
   }
 }

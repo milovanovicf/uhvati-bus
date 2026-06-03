@@ -18,7 +18,7 @@ interface Params {
 
 interface Props {
   params: Promise<Params>;
-  searchParams: Promise<{ vreme?: string }>;
+  searchParams: Promise<{ povratak?: string }>;
 }
 
 async function resolveCities(fromSlug: string, toSlug: string) {
@@ -58,7 +58,7 @@ export default async function RutePage({ params, searchParams }: Props) {
   if (company) redirect('/company');
 
   const { from, to, date } = await params;
-  const { vreme } = await searchParams;
+  const { povratak } = await searchParams;
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) notFound();
 
@@ -135,7 +135,7 @@ export default async function RutePage({ params, searchParams }: Props) {
               fromId={fromCity.id.toString()}
               toId={toCity.id.toString()}
               date={date}
-              time={vreme}
+              returnDate={povratak}
             />
           </Suspense>
         </div>

@@ -34,7 +34,15 @@
     "email": "Email",
     "seats": "Number of seats",
     "searchBtn": "View routes",
-    "validation": "Please select departure city, destination city and date."
+    "validation": "Please select departure city, destination city and date.",
+    "returnTrip": "Return ticket",
+    "returnDate": "Return date",
+    "nextStep": "Next step",
+    "backStep": "Back",
+    "makeReservation": "Search trips",
+    "step2Title": "Return trip (optional)",
+    "step2Hint": "Leave empty if you do not want a return ticket.",
+    "skipReturn": "Skip"
   },
   "howItWorks": {
     "title": "How does it work?",
@@ -111,7 +119,16 @@
     "noSeatsBtn": "No seats",
     "freeSeats": "{count} available",
     "full": "Full",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "tabOutbound": "Outbound",
+    "tabReturn": "Return",
+    "returnNoTrips": "No trips available for the return route.",
+    "returnTryOther": "Try a different date.",
+    "selectBtn": "Select",
+    "selectedLabel": "Selected departure",
+    "changeOutbound": "Change departure",
+    "returnStepTitle": "Return trip (optional)",
+    "reserveBtn": "Reserve"
   },
   "reservation": {
     "title": "Book a seat",
@@ -142,7 +159,17 @@
     "invalidMsg": "This link is not valid or has expired.",
     "notFoundMsg": "Reservation not found. It may have already been cancelled.",
     "alreadyDeparted": "The trip has already departed — the reservation cannot be cancelled.",
-    "cancelError": "An error occurred. Please try again."
+    "cancelError": "An error occurred. Please try again.",
+    "changeDateBtn": "Change date",
+    "changeDateTitle": "Select a new date",
+    "searchTripsBtn": "Search departures",
+    "confirmChange": "Confirm change",
+    "cancelChange": "Cancel",
+    "changedTitle": "Date changed!",
+    "changedMsg": "A new confirmation has been sent to your email.",
+    "changeDisabled": "You cannot change the date less than 24 hours before departure.",
+    "noTripsOnDate": "No departures available on this date.",
+    "changeError": "Failed to change the date. Please try again."
   },
   "aboutUs": {
     "heroTitle": "About us",
@@ -361,5 +388,39 @@
     "colDeparture": "Departure",
     "colSeats": "Seats",
     "colBookedAt": "Booked at"
+  },
+  "returnBooking": {
+    "title": "Book your return ticket",
+    "subtitle": "Select a return date and choose a departure.",
+    "route": "Return route",
+    "selectDate": "Return date",
+    "timeFilter": "filter by time",
+    "searchBtn": "Search departures",
+    "noTrips": "No departures available for this date.",
+    "tryOther": "Try a different date.",
+    "bookBtn": "Reserve",
+    "noSeatsBtn": "Full",
+    "freeSeats": "{count} seats available",
+    "existingTitle": "Your return reservation",
+    "existingRef": "Ref",
+    "existingDep": "Departure",
+    "changeDateBtn": "Change date",
+    "disabledMsg": "Cannot change a reservation less than 24 hours before departure.",
+    "confirmChange": "Confirm new departure",
+    "cancelChange": "Cancel",
+    "successTitle": "Booking successful!",
+    "successMsg": "Details have been sent to your email.",
+    "rescheduledTitle": "Date changed!",
+    "rescheduledMsg": "Your new return ticket is booked. Details sent to your email.",
+    "invalidToken": "Invalid or expired link.",
+    "seats": "Seats",
+    "departure": "Departure",
+    "arrival": "Arrival",
+    "duration": "Duration",
+    "company": "Carrier",
+    "fullName": "Full name",
+    "email": "Email",
+    "seatsCount": "Number of seats",
+    "loading": "Loading..."
   }
 }
