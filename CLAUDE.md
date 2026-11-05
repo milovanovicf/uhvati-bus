@@ -43,6 +43,27 @@ person to look.
 - Never commit, push or merge unless the user asks for that command explicitly.
 - `main` deploys production. Migrations in `prisma/migrations/` run against the production Neon database.
 
+## Learning rules (take precedence over Agent workflow)
+
+This repo is my practice ground. I write the code that involves design
+decisions: concurrency, data model, auth, error handling.
+
+- `implementer` is only for mechanical work: config, renames, threading a
+  value through call sites, fixing test setup. Not for business logic in
+  `actions.ts` unless I explicitly say so.
+- `triage` briefs list 2-3 options with trade-offs and contain no code.
+- `reviewer` reviews MY diff adversarially: race conditions, auth gaps,
+  failure modes, bad inputs.
+- When I'm stuck: hints first, code only if I ask.
+
+For the coordinator this means:
+- A task that is verifiable but involves a design decision goes to me with the
+  brief, not to `implementer`.
+- When I ask for help mid-task, start with the smallest useful hint (where to look,
+  what question to ask, which concept applies) and escalate only if I ask for more.
+  Do not write or edit code in `src/` for these tasks unless I ask for code.
+- When unsure whether a task is mechanical, ask me instead of routing it.
+
 ## Agent workflow
 
 The main session acts as **coordinator**. It takes a task from any source (a GitHub
@@ -61,9 +82,11 @@ task ─▶ triage ─▶ person approves brief ─▶ verifiable? ─ yes ─�
    context. Read files directly only when you already know the exact file and range.
 1. **Triage first, always.** Send every non-trivial task to `triage`. Show the brief
    to the user and get their answers to its open questions before any code is written.
-2. **Route by verifiability, not task type.** Only send a task to `implementer` when
-   triage named a failing test that would prove it done. "The page looks wrong" does
-   not qualify; config changes, renames and threading a value through call sites do.
+2. **Route by verifiability, then by the learning rules.** Only send a task to
+   `implementer` when triage named a failing test that would prove it done **and** the
+   task is mechanical (see Learning rules). "The page looks wrong" does not qualify;
+   config changes, renames and threading a value through call sites do. Everything
+   else goes to me with the brief.
 3. **Review every change** with `reviewer`, whether an agent or a person wrote it.
 
 ### Controls every agent follows
