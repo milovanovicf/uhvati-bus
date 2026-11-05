@@ -42,6 +42,19 @@ person to look.
 - Branch from `main` as `<type>/<kebab-description>` (`feat`, `fix`, `refactor`, `chore`, `docs`). PRs target `main`.
 - Never commit, push or merge unless the user asks for that command explicitly.
 - `main` deploys production. Migrations in `prisma/migrations/` run against the production Neon database.
+- Merging into `main` is the quality gate, not pushing. A pushed branch affects nothing.
+
+### Real work vs. experiments
+
+| Prefix | What | Pushed? | Merged? |
+|---|---|---|---|
+| `feat/`, `fix/`, `refactor/`, `chore/`, `docs/` | Real work, including practice that solves a real task | Yes | After `reviewer` and checks pass |
+| `spike/` | Throwaway experiments: comparing approaches, trying a library | Optional (backup only) | Never; delete when done |
+
+Practice code written on a `feat/` branch is production code once it passes review.
+When a spike ends, record what it taught in `.claude/scratchpad/findings/` and delete
+the branch. Never open a PR from a `spike/` branch; redo the chosen approach on a
+`feat/` branch from `main`.
 
 ## Learning rules (take precedence over Agent workflow)
 
