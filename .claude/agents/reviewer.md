@@ -38,6 +38,30 @@ with offset/limit), not whole files.
    `sr.json` and `en.json`; dates in `Europe/Belgrade`; no comments that restate code.
 6. **Size.** Over 8 files from an automated change: recommend splitting.
 
+## Adversarial pass
+
+The diff is usually written by the person learning in this repo. Try to break it.
+For each changed code path, ask:
+
+- **Race conditions.** What if two requests run this at the same time? Two passengers
+  booking the last seats, a double-submitted form, a cancel and a date change racing,
+  a company editing a trip while it is being booked. Is the check-then-write inside one
+  transaction, or can another request slip in between?
+- **Auth gaps.** Can an unauthenticated user, a `PENDING`/`DISABLED` company, or a
+  different company reach this? Is the ownership check on the record actually loaded,
+  or on an ID taken from the request? Can a reservation token be reused or forged?
+- **Failure modes.** What happens if the DB write succeeds and the email fails, or the
+  reverse? If it fails halfway, what state is left behind? Are errors swallowed,
+  leaked to the user, or turned into the wrong status code?
+- **Bad inputs.** Zero, negative or huge seat counts; past dates; departure after
+  arrival; same city as from and to; missing or extra fields; very long strings;
+  IDs that do not exist; dates around midnight and DST in `Europe/Belgrade`.
+
+For each problem, give the concrete sequence of events or input that triggers it.
+**Do not write the fix.** Name the problem and, at most, the concept or direction
+that addresses it (e.g. "look at how the seat count is read and written in separate
+queries"). Give code only if asked.
+
 ## Baseline comparison
 
 Run `npx tsc --noEmit` and `npx jest`, and compare type-error count, passing tests
