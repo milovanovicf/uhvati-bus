@@ -21,6 +21,7 @@ jest.mock('next/headers', () => ({
 }));
 
 jest.mock('next/cache', () => ({ revalidatePath: jest.fn() }));
+jest.mock('@/lib/email', () => ({ sendBookingConfirmation: jest.fn() }));
 
 import { prisma } from '@/app/utils/db';
 
@@ -34,6 +35,10 @@ const mockTrip = {
   arrival: new Date('2025-06-01T10:00:00Z'),
   seatsTotal: 50,
   reservations: [],
+  route: {
+    from: "Kruševac",
+    to: "Belgrade"
+  }
 };
 
 function makeFormData(overrides: Record<string, string> = {}): FormData {
@@ -63,7 +68,7 @@ describe('handleReservationCreate', () => {
     (prisma.reservation.create as jest.Mock).mockResolvedValue(created);
 
     const result = await handleReservationCreate({ success: false }, makeFormData());
-
+    
     expect(result.success).toBe(true);
     expect(prisma.reservation.create).toHaveBeenCalledWith(
       expect.objectContaining({
