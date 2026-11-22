@@ -13,6 +13,7 @@ jest.mock('@/app/utils/db', () => ({
 
 jest.mock('next/headers', () => ({ cookies: jest.fn() }));
 jest.mock('next/cache', () => ({ revalidatePath: jest.fn() }));
+jest.mock('@/lib/email', () => ({ sendBookingConfirmation: jest.fn() }));
 
 import { prisma } from '@/app/utils/db';
 import { cookies } from 'next/headers';

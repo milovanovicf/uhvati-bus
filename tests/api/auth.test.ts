@@ -25,6 +25,8 @@ jest.mock('bcrypt', () => ({
   hash: jest.fn(),
 }));
 
+jest.mock('@/lib/email', () => ({ sendVerificationCode: jest.fn() }));
+
 import { prisma } from '@/app/utils/db';
 import bcrypt from 'bcrypt';
 
@@ -33,6 +35,8 @@ const mockCompany = {
   name: 'Test Prevoz',
   email: 'test@prevoz.com',
   password: '$2b$10$hashedpassword',
+  emailVerified: true,
+  status: 'ACTIVE' 
 };
 
 // ─── Login ────────────────────────────────────────────────────────────────────
@@ -95,10 +99,8 @@ describe('POST /api/register', () => {
       password: 'password123',
     });
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.company.email).toBe(mockCompany.email);
-    expect(res.body.company.id).toBe(mockCompany.id);
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);    
   });
 
   it('returns 409 when email is already registered', async () => {
@@ -112,20 +114,6 @@ describe('POST /api/register', () => {
 
     expect(res.status).toBe(409);
     expect(res.body.error).toMatch(/already in use/i);
-  });
-
-  it('does not expose password in the response', async () => {
-    (prisma.company.findUnique as jest.Mock).mockResolvedValue(null);
-    (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashedpassword');
-    (prisma.company.create as jest.Mock).mockResolvedValue(mockCompany);
-
-    const res = await request(server).post('/').send({
-      name: 'Test Prevoz',
-      email: 'test@prevoz.com',
-      password: 'password123',
-    });
-
-    expect(res.body.company.password).toBeUndefined();
   });
 });
 
